@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Оформление заказа — Ламбарда</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / <a th:href="@{/cart}">Корзина</a> / Оформление заказа</nav>
+        <h1>Оформление заказа</h1>
+        <div class="account-card">
+            <p>Получатель: <strong th:text="${user.fullName}">Имя</strong>, <span th:text="${user.email}">email</span></p>
+        </div>
+        <table class="cart-table">
+            <thead><tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr></thead>
+            <tbody>
+                <tr th:each="item : ${cartItems}">
+                    <td th:text="${item.productName}">Товар</td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</td>
+                    <td th:text="${item.quantity}">1</td>
+                    <td th:text="${#numbers.formatDecimal(item.subtotal, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</td>
+                </tr>
+            </tbody>
+        </table>
+        <form th:action="@{/order/place}" method="post" class="form-group" style="max-width: 500px;">
+            <label for="comment">Комментарий к заказу</label>
+            <textarea id="comment" name="comment" placeholder="Необязательно"></textarea>
+            <div class="form-actions">
+                <button type="submit" class="btn">Подтвердить заказ</button>
+                <a th:href="@{/cart}" class="btn btn-secondary">Вернуться в корзину</a>
+            </div>
+        </form>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

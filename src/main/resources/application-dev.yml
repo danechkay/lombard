@@ -1,0 +1,21 @@
+# Для разработки: можно использовать H2 или PostgreSQL
+# Раскомментируйте и настройте при необходимости:
+#
+# spring:
+#   datasource:
+#     url: jdbc:postgresql://localhost:5432/lombard
+#     username: lombard
+#     password: lombard
+#     driver-class-name: org.postgresql.Driver
+#   jpa:
+#     properties:
+#       hibernate:
+#         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    ru.lombard: DEBUG

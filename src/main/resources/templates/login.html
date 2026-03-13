@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Вход — Ламбарда</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${param.error}" class="alert alert-error">Неверный email или пароль.</div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / Вход</nav>
+        <h1>Вход</h1>
+        <div class="account-card" style="max-width: 400px;">
+            <form th:action="@{/login}" method="post">
+                <div class="form-group">
+                    <label for="username">Email</label>
+                    <input type="email" id="username" name="username" required autofocus/>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" required/>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn">Войти</button>
+                    <a th:href="@{/register}">Регистрация</a>
+                </div>
+            </form>
+        </div>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

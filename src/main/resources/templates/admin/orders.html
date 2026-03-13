@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Заказы — Админ</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / <a th:href="@{/admin}">Админ</a> / Заказы</nav>
+        <h1>Заказы</h1>
+        <table class="data-table">
+            <thead><tr><th>№</th><th>Покупатель</th><th>Сумма</th><th>Статус</th><th>Дата</th><th></th></tr></thead>
+            <tbody>
+                <tr th:each="o : ${orders.content}">
+                    <td th:text="${o.id}">0</td>
+                    <td th:text="${o.user.fullName + ' (' + o.user.email + ')'}">Покупатель</td>
+                    <td th:text="${#numbers.formatDecimal(o.totalAmount, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0</td>
+                    <td th:text="${o.orderStatus}">статус</td>
+                    <td th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy HH:mm')}">дата</td>
+                    <td><a th:href="@{/admin/orders/{id}(id=${o.id})}" class="btn btn-secondary" style="padding:0.3rem 0.6rem;">Открыть</a></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="pagination" th:if="${orders.totalPages > 1}">
+            <a th:if="${orders.hasPrevious()}" th:href="@{/admin/orders(page=${orders.number - 1})}">←</a>
+            <span th:text="${'Страница ' + (orders.number + 1) + ' из ' + orders.totalPages}">1</span>
+            <a th:if="${orders.hasNext()}" th:href="@{/admin/orders(page=${orders.number + 1})}">→</a>
+        </div>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

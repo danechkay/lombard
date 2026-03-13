@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Корзина — Ламбарда</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / Корзина</nav>
+        <h1>Корзина</h1>
+        <table class="cart-table" th:if="${!cartItems.isEmpty()}">
+            <thead>
+                <tr><th>Фото</th><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th><th></th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${cartItems}">
+                    <td><img th:src="${item.mainImageUrl != null ? item.mainImageUrl : '/images/placeholder.svg'}" class="cart-img" th:alt="${item.productName}" onerror="this.src='/images/placeholder.svg'"/></td>
+                    <td><a th:href="@{/catalog/product/{slug}(slug=${item.productSlug})}" th:text="${item.productName}">Товар</a></td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</td>
+                    <td>
+                        <form th:action="@{/cart/update}" method="post" class="form-inline">
+                            <input type="hidden" name="cartItemId" th:value="${item.id}"/>
+                            <input type="number" name="quantity" th:value="${item.quantity}" min="1" style="width:60px;"/>
+                            <button type="submit">OK</button>
+                        </form>
+                    </td>
+                    <td th:text="${#numbers.formatDecimal(item.subtotal, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</td>
+                    <td>
+                        <form th:action="@{/cart/remove}" method="post" style="display:inline;">
+                            <input type="hidden" name="productId" th:value="${item.productId}"/>
+                            <button type="submit">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p th:if="${!cartItems.isEmpty()}">
+            <strong class="cart-total">Итого: <span th:text="${cartTotal != null ? #numbers.formatDecimal(cartTotal, 1, 'COMMA', 2, 'POINT') + ' ₽' : '0 ₽'}">0 ₽</span></strong><br/>
+            <a th:href="@{/order/checkout}" class="btn">Оформить заказ</a>
+        </p>
+        <p th:if="${cartItems.isEmpty()}">Корзина пуста. <a th:href="@{/catalog}">Перейти в каталог</a>.</p>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

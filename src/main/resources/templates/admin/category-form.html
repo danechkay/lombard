@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${category.id != null ? 'Редактирование категории' : 'Новая категория'}">Категория</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / <a th:href="@{/admin}">Админ</a> / <a th:href="@{/admin/categories}">Категории</a> / <span th:text="${category.id != null ? 'Редактирование' : 'Новая'}">Форма</span></nav>
+        <h1 th:text="${category.id != null ? 'Редактирование категории' : 'Новая категория'}">Категория</h1>
+        <form th:if="${category.id == null}" th:action="@{/admin/categories/new}" method="post" class="account-card">
+            <div class="form-group"><label>Название *</label><input type="text" name="name" required/></div>
+            <div class="form-group"><label>Родительская категория</label><select name="parentId"><option value="">— Нет —</option><option th:each="p : ${parents}" th:value="${p.id}" th:text="${p.name}">Категория</option></select></div>
+            <div class="form-group"><label>Порядок</label><input type="number" name="sortOrder" value="0"/></div>
+            <div class="form-actions"><button type="submit" class="btn">Создать</button><a th:href="@{/admin/categories}" class="btn btn-secondary">Отмена</a></div>
+        </form>
+        <form th:if="${category.id != null}" th:action="@{/admin/categories/edit/{id}(id=${category.id})}" method="post" class="account-card">
+            <div class="form-group"><label>Название *</label><input type="text" name="name" th:value="${category.name}" required/></div>
+            <div class="form-group"><label>Родительская категория</label><select name="parentId"><option value="">— Нет —</option><option th:each="p : ${parents}" th:value="${p.id}" th:text="${p.name}" th:selected="${category.parent != null && category.parent.id == p.id}">Категория</option></select></div>
+            <div class="form-group"><label>Порядок</label><input type="number" name="sortOrder" th:value="${category.sortOrder}"/></div>
+            <div class="form-actions"><button type="submit" class="btn">Сохранить</button><a th:href="@{/admin/categories}" class="btn btn-secondary">Отмена</a></div>
+        </form>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

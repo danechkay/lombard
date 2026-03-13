@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Мои заказы — Ламбарда</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / <a th:href="@{/account}">Личный кабинет</a> / Заказы</nav>
+        <h1>Мои заказы</h1>
+        <ul class="orders-list" th:if="${!orders.isEmpty()}">
+            <li th:each="o : ${orders}">
+                <strong>Заказ №<span th:text="${o.id}">0</span></strong>
+                от <span th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy HH:mm')}">дата</span>
+                — <span th:text="${#numbers.formatDecimal(o.totalAmount, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</span>
+                — Статус: <span th:text="${o.orderStatus}">статус</span>
+            </li>
+        </ul>
+        <p th:if="${orders.isEmpty()}">У вас пока нет заказов.</p>
+        <p><a th:href="@{/account}" class="btn btn-secondary">Назад в кабинет</a></p>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

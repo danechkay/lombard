@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${product.name + ' — Ламбарда'}">Товар</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <nav class="breadcrumb">
+            <a th:href="@{/catalog}">Главная</a> / <a th:href="@{/catalog}">Каталог</a> / <span th:text="${product.name}">Товар</span>
+        </nav>
+        <div class="product-page" th:if="${product != null}">
+            <div class="product-gallery">
+                <img th:if="${product.mainImageUrl != null}" th:src="${product.mainImageUrl}" th:alt="${product.name}"/>
+                <img th:if="${product.mainImageUrl == null}" src="/images/placeholder.svg" th:alt="${product.name}"/>
+                <div th:if="${product.imageUrls != null && product.imageUrls.size() > 1}">
+                    <img th:each="url : ${product.imageUrls}" th:if="${url != product.mainImageUrl}" th:src="${url}" style="width: 80px; height: 80px; object-fit: cover; margin: 4px;" th:alt="${product.name}"/>
+                </div>
+            </div>
+            <div class="product-detail">
+                <h1 th:text="${product.name}">Название</h1>
+                <div class="price" th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</div>
+                <p><strong>Состояние:</strong> <span th:text="${product.condition.name() == 'NEW' ? 'Новое' : 'Б/У'}">Б/У</span></p>
+                <p th:if="${product.year != null}"><strong>Год:</strong> <span th:text="${product.year}"></span></p>
+                <p th:if="${product.description != null}" class="description" th:text="${product.description}">Описание</p>
+                <p sec:authorize="isAuthenticated()">
+                    <form th:action="@{/cart/add}" method="post" style="display:inline;">
+                        <input type="hidden" name="productId" th:value="${product.id}"/>
+                        <input type="hidden" name="quantity" value="1"/>
+                        <button type="submit" class="btn">В корзину</button>
+                    </form>
+                </p>
+                <p sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}" class="btn">Войти, чтобы купить</a>
+                </p>
+            </div>
+        </div>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

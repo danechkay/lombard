@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: lombard
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/Lombard
+    username: lombard
+    password: lombard
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    open-in-view: false
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Загрузка файлов (фото товаров) — сохраняем в папку проекта
+app:
+  upload-dir: ${user.dir}/uploads
+  catalog-page-size: 12
+
+logging:
+  level:
+    ru.lombard: INFO
+    org.springframework.security: INFO

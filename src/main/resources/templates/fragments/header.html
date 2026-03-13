@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+    <header class="header" th:fragment="header">
+        <div class="container">
+            <a th:href="@{/catalog}" class="logo">Ламбарда</a>
+            <nav class="nav">
+                <a th:href="@{/catalog}">Каталог</a>
+                <span sec:authorize="isAuthenticated()">
+                    <a th:href="@{/cart}">Корзина <span th:if="${cartCount != null}" th:text="'(' + ${cartCount} + ')'">(0)</span></a>
+                    <a th:href="@{/account}">Личный кабинет</a>
+                </span>
+                <span sec:authorize="hasAnyRole('ADMIN','MANAGER')">
+                    <a th:href="@{/admin}">Администрирование</a>
+                </span>
+                <span sec:authorize="!isAuthenticated()">
+                    <a th:href="@{/login}">Войти</a>
+                    <a th:href="@{/register}">Регистрация</a>
+                </span>
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit">Выйти</button>
+                </form>
+            </nav>
+        </div>
+    </header>
+</body>
+</html>

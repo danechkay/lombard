@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Категории — Админ</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / <a th:href="@{/admin}">Админ</a> / Категории</nav>
+        <h1>Категории</h1>
+        <p><a th:href="@{/admin/categories/new}" class="btn">Добавить категорию</a> <a th:href="@{/admin/products}" class="btn btn-secondary">Товары</a></p>
+        <table class="data-table">
+            <thead><tr><th>ID</th><th>Название</th><th>Slug</th><th>Порядок</th><th>Действия</th></tr></thead>
+            <tbody>
+                <tr th:each="c : ${categories}">
+                    <td th:text="${c.id}">0</td>
+                    <td th:text="${c.name}">Название</td>
+                    <td th:text="${c.slug}">slug</td>
+                    <td th:text="${c.sortOrder}">0</td>
+                    <td>
+                        <a th:href="@{/admin/categories/edit/{id}(id=${c.id})}" class="btn btn-secondary" style="padding:0.3rem 0.6rem;">Изменить</a>
+                        <form th:action="@{/admin/categories/delete/{id}(id=${c.id})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn" style="padding:0.3rem 0.6rem; background:#b52a2a;">Удалить</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

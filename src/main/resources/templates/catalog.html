@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Каталог — Ламбарда</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / Каталог</nav>
+
+        <div class="catalog-filters">
+            <form th:action="@{/catalog}" method="get" class="filters-form">
+                <input type="hidden" name="page" value="0"/>
+                <div><label>Категория</label>
+                    <select name="categoryId">
+                        <option value="">Все</option>
+                        <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
+                                th:selected="${categoryId != null && categoryId == c.id}"></option>
+                    </select>
+                </div>
+                <div><label>Цена от</label><input type="number" name="minPrice" th:value="${minPrice}" placeholder="0" step="0.01"/></div>
+                <div><label>Цена до</label><input type="number" name="maxPrice" th:value="${maxPrice}" placeholder="∞" step="0.01"/></div>
+                <div><label>Состояние</label>
+                    <select name="condition">
+                        <option value="">Любое</option>
+                        <option value="NEW" th:selected="${condition == 'NEW'}">Новое</option>
+                        <option value="USED" th:selected="${condition == 'USED'}">Б/У</option>
+                    </select>
+                </div>
+                <div><label>Поиск</label><input type="text" name="search" th:value="${search}" placeholder="Название"/></div>
+                <button type="submit" class="btn">Применить</button>
+            </form>
+        </div>
+
+        <div class="catalog-grid" th:if="${!products.isEmpty()}">
+            <article th:each="p : ${products}" class="product-card">
+                <a th:href="@{/catalog/product/{slug}(slug=${p.slug})}">
+                    <div class="img-wrap">
+                        <img th:src="${p.mainImageUrl != null ? p.mainImageUrl : '/images/placeholder.svg'}" th:alt="${p.name}" onerror="this.src='/images/placeholder.svg'"/>
+                    </div>
+                    <div class="info">
+                        <div class="name" th:text="${p.name}">Название</div>
+                        <div class="price" th:text="${#numbers.formatDecimal(p.price, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</div>
+                        <div class="condition" th:text="${p.condition.name() == 'NEW' ? 'Новое' : 'Б/У'}">Б/У</div>
+                    </div>
+                </a>
+                <div class="info" style="padding-top: 0;">
+                    <form sec:authorize="isAuthenticated()" th:action="@{/cart/add}" method="post" style="display:inline;">
+                        <input type="hidden" name="productId" th:value="${p.id}"/>
+                        <input type="hidden" name="quantity" value="1"/>
+                        <button type="submit" class="btn">В корзину</button>
+                    </form>
+                    <a sec:authorize="!isAuthenticated()" th:href="@{/login}" class="btn">Войти, чтобы купить</a>
+                </div>
+            </article>
+        </div>
+        <p th:if="${products.isEmpty()}" class="muted">Товаров не найдено.</p>
+
+        <div class="pagination" th:if="${products.totalPages > 1}">
+            <a th:if="${products.hasPrevious()}" th:href="@{/catalog(categoryId=${categoryId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${products.number - 1})}">←</a>
+            <span th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}">
+                <a th:if="${i != products.number}" th:href="@{/catalog(categoryId=${categoryId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${i})}" th:text="${i + 1}">1</a>
+                <span th:if="${i == products.number}" class="current" th:text="${i + 1}">1</span>
+            </span>
+            <a th:if="${products.hasNext()}" th:href="@{/catalog(categoryId=${categoryId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${products.number + 1})}">→</a>
+        </div>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

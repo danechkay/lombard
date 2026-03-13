@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Пользователи — Админ</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / <a th:href="@{/admin}">Админ</a> / Пользователи</nav>
+        <h1>Пользователи</h1>
+        <table class="data-table">
+            <thead><tr><th>ID</th><th>Email</th><th>Имя</th><th>Роль</th><th>Блок</th><th>Действия</th></tr></thead>
+            <tbody>
+                <tr th:each="u : ${users}">
+                    <td th:text="${u.id}">0</td>
+                    <td th:text="${u.email}">email</td>
+                    <td th:text="${u.fullName}">Имя</td>
+                    <td th:text="${u.role}">роль</td>
+                    <td th:text="${u.blocked ? 'Да' : 'Нет'}">—</td>
+                    <td>
+                        <form th:if="${!u.blocked}" th:action="@{/admin/users/{id}/block(id=${u.id})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-secondary" style="padding:0.3rem 0.6rem;">Заблокировать</button>
+                        </form>
+                        <form th:if="${u.blocked}" th:action="@{/admin/users/{id}/unblock(id=${u.id})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn" style="padding:0.3rem 0.6rem;">Разблокировать</button>
+                        </form>
+                        <form th:if="${u.role.name() != 'ADMIN'}" th:action="@{/admin/users/{id}/role(id=${u.id})}" method="post" style="display:inline;">
+                            <select name="role"><option value="USER" th:selected="${u.role.name() == 'USER'}">Покупатель</option><option value="MANAGER" th:selected="${u.role.name() == 'MANAGER'}">Менеджер</option><option value="ADMIN" th:selected="${u.role.name() == 'ADMIN'}">Админ</option></select>
+                            <button type="submit" class="btn" style="padding:0.3rem 0.6rem;">Сменить роль</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

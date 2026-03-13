@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Заказ — Админ</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <main class="main container">
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+        <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / <a th:href="@{/admin}">Админ</a> / <a th:href="@{/admin/orders}">Заказы</a> / Заказ №<span th:text="${order.id}">0</span></nav>
+        <h1>Заказ №<span th:text="${order.id}">0</span></h1>
+        <div class="account-card">
+            <p><strong>Покупатель:</strong> <span th:text="${order.userFullName}">Имя</span>, <span th:text="${order.userEmail}">email</span></p>
+            <p><strong>Статус:</strong> <span th:text="${order.orderStatus}">статус</span></p>
+            <p><strong>Сумма:</strong> <span th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0</span></p>
+            <p th:if="${order.comment != null}"><strong>Комментарий:</strong> <span th:text="${order.comment}">—</span></p>
+            <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+                <label>Изменить статус:</label>
+                <select name="status">
+                    <option value="NEW" th:selected="${order.orderStatus.name() == 'NEW'}">Новый</option>
+                    <option value="PAID" th:selected="${order.orderStatus.name() == 'PAID'}">Оплачен</option>
+                    <option value="SHIPPED" th:selected="${order.orderStatus.name() == 'SHIPPED'}">Отправлен</option>
+                    <option value="COMPLETED" th:selected="${order.orderStatus.name() == 'COMPLETED'}">Выдан</option>
+                    <option value="CANCELLED" th:selected="${order.orderStatus.name() == 'CANCELLED'}">Отменён</option>
+                </select>
+                <button type="submit" class="btn">Сохранить</button>
+            </form>
+        </div>
+        <table class="data-table">
+            <thead><tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr></thead>
+            <tbody>
+                <tr th:each="item : ${order.items}">
+                    <td th:text="${item.productName}">Товар</td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0</td>
+                    <td th:text="${item.quantity}">1</td>
+                    <td th:text="${#numbers.formatDecimal(item.subtotal, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0</td>
+                </tr>
+            </tbody>
+        </table>
+        <p><a th:href="@{/admin/orders}" class="btn btn-secondary">К списку заказов</a></p>
+    </main>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
