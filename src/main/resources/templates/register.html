@@ -14,6 +14,9 @@
         <h1>Регистрация</h1>
         <div class="account-card" style="max-width: 400px;">
             <form th:action="@{/register}" th:object="${form}" method="post">
+                <div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}">
+                    <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+                </div>
                 <div class="form-group" th:classappend="${#fields.hasErrors('email')} ? 'error' : ''">
                     <label for="email">Email</label>
                     <input type="email" id="email" th:field="*{email}" required/>

@@ -13,3 +13,5 @@ target/
 Thumbs.db
 *.DS_Store
 *.swp
+frontend/node_modules/
+frontend/dist/

@@ -26,8 +26,7 @@ public class AdminOrderController {
 
     @GetMapping("/{id}")
     public String view(@PathVariable Long id, Model model) {
-        Order order = orderService.findById(id).orElseThrow();
-        model.addAttribute("order", orderService.toDto(order));
+        model.addAttribute("order", orderService.findDtoById(id));
         return "admin/order-view";
     }
 

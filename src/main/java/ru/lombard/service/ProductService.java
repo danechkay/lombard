@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,16 +41,20 @@ public class ProductService {
     @Value("${app.catalog-page-size:12}")
     private int pageSize;
 
+    @Transactional(readOnly = true)
     public Page<ProductDto> findPublished(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice,
                                           Product.Condition condition, String search, int page) {
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by("publishedAt").descending().and(Sort.by("id").descending()));
+        String normalizedSearch = (search == null || search.isBlank())
+                ? null
+                : search.trim().toLowerCase(Locale.ROOT);
         Page<Product> products = productRepository.findPublishedWithFilters(
-                Product.ProductStatus.PUBLISHED, categoryId, minPrice, maxPrice, condition, search, pageable);
+                Product.ProductStatus.PUBLISHED, categoryId, minPrice, maxPrice, condition, normalizedSearch, pageable);
         return products.map(this::toDto);
     }
 
     public Page<Product> findAllForAdmin(int page, int size) {
-        return productRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()));
+        return productRepository.findAllWithCategory(PageRequest.of(page, size, Sort.by("createdAt").descending()));
     }
 
     public Optional<Product> findById(Long id) {

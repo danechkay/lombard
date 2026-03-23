@@ -56,18 +56,27 @@ public class OrderService {
         return order;
     }
 
+    @Transactional(readOnly = true)
     public List<OrderDto> findOrdersByUser(Long userId, int limit) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(0, limit, Sort.by("createdAt").descending())).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Page<Order> findAllOrders(int page, int size) {
         return orderRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size, Sort.by("createdAt").descending()));
     }
 
+    @Transactional(readOnly = true)
     public Optional<Order> findById(Long id) {
         return orderRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public OrderDto findDtoById(Long id) {
+        Order order = orderRepository.findWithDetailsById(id).orElseThrow();
+        return toDto(order);
     }
 
     @Transactional

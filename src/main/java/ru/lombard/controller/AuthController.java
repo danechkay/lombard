@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -48,6 +49,9 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             result.rejectValue("email", "email.exists", e.getMessage());
             return "register";
+        } catch (DataIntegrityViolationException e) {
+            result.reject("register.error", "Не удалось завершить регистрацию. Проверьте корректность данных.");
+            return "register";
         }
     }
 
@@ -61,6 +65,7 @@ public class AuthController {
         private String password;
         @NotBlank(message = "Укажите имя")
         private String fullName;
+        @Size(max = 20, message = "Телефон не должен быть длиннее 20 символов")
         private String phone;
     }
 }

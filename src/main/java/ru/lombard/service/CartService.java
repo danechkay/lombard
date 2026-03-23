@@ -22,6 +22,7 @@ public class CartService {
     private final ProductRepository productRepository;
     private final ProductService productService;
 
+    @Transactional(readOnly = true)
     public List<CartItemDto> getCart(Long userId) {
         return cartItemRepository.findByUserIdOrderByAddedAtDesc(userId).stream()
                 .map(this::toDto)
@@ -32,6 +33,7 @@ public class CartService {
         return (int) cartItemRepository.countByUserId(userId);
     }
 
+    @Transactional(readOnly = true)
     public BigDecimal getCartTotal(Long userId) {
         return getCart(userId).stream()
                 .map(CartItemDto::getSubtotal)

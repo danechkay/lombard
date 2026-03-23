@@ -53,6 +53,114 @@ mvn spring-boot:run
 
 Приложение будет доступно по адресу: **http://localhost:8080**
 
+### 2.1 Запуск React-фронтенда (новый этап переноса)
+
+Ниже подробная инструкция, если вы впервые работаете с React.
+
+#### Шаг 1. Установить Node.js
+
+1. Перейдите на сайт [https://nodejs.org](https://nodejs.org).
+2. Скачайте версию **LTS** для Windows.
+3. Установите с настройками по умолчанию.
+4. Перезапустите терминал/IDE.
+5. Проверьте установку:
+
+```bash
+node -v
+npm -v
+```
+
+Если команды выводят версии, значит всё установлено корректно.
+
+#### Шаг 2. Запустить backend (Spring Boot)
+
+Из корня проекта:
+
+```bash
+cd C:\Users\danechka\Desktop\lombard
+mvn spring-boot:run
+```
+
+Backend должен работать на `http://localhost:8080`.
+
+#### Шаг 3. Установить зависимости React
+
+Откройте второй терминал:
+
+```bash
+cd C:\Users\danechka\Desktop\lombard\frontend
+npm install
+```
+
+#### Шаг 4. Запустить React в режиме разработки
+
+```bash
+npm run dev
+```
+
+Frontend будет доступен по адресу `http://localhost:5173`.
+
+#### Шаг 5. Как работает связка frontend + backend
+
+- React отправляет запросы на `/api/...`.
+- Vite-прокси автоматически пересылает их на Spring Boot (`localhost:8080`).
+- Авторизация сессией работает через cookie (`credentials: include`).
+- Для входа используется Spring Security endpoint `/login`.
+- Для выхода используется `/logout`.
+
+#### Шаг 6. Что уже перенесено на React
+
+- Каталог (`/`) с фильтрами и пагинацией.
+- Карточка товара (`/product/:slug`).
+- Корзина (`/cart`): список, изменение количества, удаление.
+- Оформление заказа (`/checkout`).
+- Авторизация (`/login`) и регистрация (`/register`).
+- Личный кабинет (`/account`) и история заказов (`/account/orders`).
+- Админка (`/admin`, `/admin/products`, `/admin/categories`, `/admin/orders`, `/admin/users`).
+
+#### Шаг 7. Какие API добавлены в backend
+
+- `GET /api/catalog`
+- `GET /api/catalog/categories`
+- `GET /api/catalog/product/{slug}`
+- `GET /api/auth/me`
+- `POST /api/auth/register`
+- `GET /api/cart`
+- `POST /api/cart/add`
+- `POST /api/cart/update`
+- `POST /api/cart/remove`
+- `GET /api/order/checkout`
+- `POST /api/order/place`
+- `GET /api/account`
+- `GET /api/account/orders`
+- `GET /api/admin/products`
+- `GET /api/admin/products/{id}`
+- `POST /api/admin/products`
+- `POST /api/admin/products/{id}`
+- `POST /api/admin/products/{id}/publish`
+- `POST /api/admin/products/{id}/unpublish`
+- `GET /api/admin/categories`
+- `POST /api/admin/categories`
+- `POST /api/admin/categories/{id}`
+- `POST /api/admin/categories/{id}/delete`
+- `GET /api/admin/orders`
+- `GET /api/admin/orders/{id}`
+- `POST /api/admin/orders/{id}/status`
+- `GET /api/admin/users`
+- `POST /api/admin/users/{id}/block`
+- `POST /api/admin/users/{id}/unblock`
+- `POST /api/admin/users/{id}/role`
+
+#### Шаг 8. Production-сборка React
+
+```bash
+cd C:\Users\danechka\Desktop\lombard\frontend
+npm run build
+```
+
+Собранные файлы будут в папке `frontend/dist`.
+На этапе разработки это не нужно, достаточно `npm run dev`.
+
 ### 3. Первый вход
 
 При первом запуске создаются два пользователя (если БД пустая):
