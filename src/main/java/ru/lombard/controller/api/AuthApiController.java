@@ -34,8 +34,8 @@ public class AuthApiController {
                         "id", user.getId(),
                         "email", user.getEmail(),
                         "fullName", user.getFullName(),
-                        "phone", user.getPhone(),
-                        "role", user.getRole().name()
+                        "phone", user.getPhone() == null ? "" : user.getPhone(),
+                        "role", user.getRole() == null ? "USER" : user.getRole().name()
                 ))
                 .orElseGet(() -> Map.of("authenticated", false));
     }

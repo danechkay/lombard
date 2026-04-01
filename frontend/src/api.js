@@ -31,17 +31,32 @@ export const api = {
     const body = new URLSearchParams();
     body.set("username", email);
     body.set("password", password);
+    // Оставляем стандартный redirect-поведение (follow), чтобы браузер
+    // гарантированно записал сессию (cookies) после успешного логина.
     const response = await fetch("/login", {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       },
-      body
+      body,
+      // Отключаем follow редиректа, чтобы не уйти на `http://localhost:8080/...`
+      // и не получить "Failed to fetch" на повторных входах из-за редиректов.
+      redirect: "manual"
     });
-    if (!response.ok) {
-      throw new Error("Неверный логин или пароль");
+
+    // Самый надежный критерий успеха — `/api/auth/me`.
+    try {
+      const me = await request("/api/auth/me");
+      if (me?.authenticated) return;
+    } catch {
+      // Игнорируем, ниже fallback на редирект/статус
     }
+
+    // Фоллбек: смотрим, куда редиректит Spring Security
+    const location = response?.headers?.get("Location") || "";
+    if (String(location).toLowerCase().includes("login?error")) throw new Error("Неверный логин или пароль");
+    throw new Error("Неверный логин или пароль");
   },
   logout: async () => {
     const response = await fetch("/logout", {
@@ -55,15 +70,33 @@ export const api = {
   getCategories: () => request("/api/catalog/categories"),
   getCatalog: (queryString) => request(`/api/catalog${queryString ? `?${queryString}` : ""}`),
   getProduct: (slug) => request(`/api/catalog/product/${slug}`),
+  getPromotions: () => request("/api/promotions"),
   getCart: () => request("/api/cart"),
   addToCart: (payload) => request("/api/cart/add", { method: "POST", body: JSON.stringify(payload) }),
   updateCart: (payload) => request("/api/cart/update", { method: "POST", body: JSON.stringify(payload) }),
   removeFromCart: (payload) => request("/api/cart/remove", { method: "POST", body: JSON.stringify(payload) }),
   getCheckout: () => request("/api/order/checkout"),
   placeOrder: (payload) => request("/api/order/place", { method: "POST", body: JSON.stringify(payload) }),
+  mockPayOrder: (orderId) => request(`/api/order/${orderId}/mock-pay`, { method: "POST" }),
   getAccount: () => request("/api/account"),
   getOrders: () => request("/api/account/orders"),
-  adminProducts: (queryString) => request(`/api/admin/products${queryString ? `?${queryString}` : ""}`),
+  calculateValuation: (payload) =>
+    request("/api/valuation/calculate", { method: "POST", body: JSON.stringify(payload) }),
+  createValuationRequest: (payload) =>
+    request("/api/valuation/requests", { method: "POST", body: JSON.stringify(payload) }),
+  getMyValuations: () => request("/api/account/valuations"),
+  adminValuations: (queryString) => request(`/api/admin/valuations${queryString ? `?${queryString}` : ""}`),
+  adminSetValuationPrice: (id, payload) =>
+    request(`/api/admin/valuations/${id}/price`, { method: "POST", body: JSON.stringify(payload) }),
+  adminProducts: (queryString) =>
+    request(`/api/admin/products${queryString ? `?${queryString}` : ""}`).then((data) => {
+      // Бэкенд может вернуть:
+      // - Page<ProductDto> с полем content
+      // - просто массив продуктов
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.content)) return data.content;
+      return [];
+    }),
   adminProductById: (id) => request(`/api/admin/products/${id}`),
   adminCreateProduct: async (formData) => {
     const response = await fetch("/api/admin/products", {
@@ -85,6 +118,7 @@ export const api = {
   },
   adminPublishProduct: (id) => request(`/api/admin/products/${id}/publish`, { method: "POST", body: "{}" }),
   adminUnpublishProduct: (id) => request(`/api/admin/products/${id}/unpublish`, { method: "POST", body: "{}" }),
+  adminDeleteProduct: (id) => request(`/api/admin/products/${id}/delete`, { method: "POST", body: "{}" }),
   adminCategories: () => request("/api/admin/categories"),
   adminCreateCategory: (payload) =>
     request("/api/admin/categories", { method: "POST", body: JSON.stringify(payload) }),
@@ -99,5 +133,12 @@ export const api = {
   adminBlockUser: (id) => request(`/api/admin/users/${id}/block`, { method: "POST", body: "{}" }),
   adminUnblockUser: (id) => request(`/api/admin/users/${id}/unblock`, { method: "POST", body: "{}" }),
   adminUserRole: (id, role) =>
-    request(`/api/admin/users/${id}/role`, { method: "POST", body: JSON.stringify({ role }) })
+    request(`/api/admin/users/${id}/role`, { method: "POST", body: JSON.stringify({ role }) }),
+  adminPromotions: () => request("/api/admin/promotions"),
+  adminCreatePromotion: (payload) =>
+    request("/api/admin/promotions", { method: "POST", body: JSON.stringify(payload) }),
+  adminUpdatePromotion: (id, payload) =>
+    request(`/api/admin/promotions/${id}`, { method: "POST", body: JSON.stringify(payload) }),
+  adminDeletePromotion: (id) =>
+    request(`/api/admin/promotions/${id}/delete`, { method: "POST", body: "{}" })
 };

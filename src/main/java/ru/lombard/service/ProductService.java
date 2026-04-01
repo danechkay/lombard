@@ -13,6 +13,7 @@ import ru.lombard.dto.ProductDto;
 import ru.lombard.entity.Product;
 import ru.lombard.entity.ProductImage;
 import ru.lombard.entity.User;
+import ru.lombard.repository.OrderItemRepository;
 import ru.lombard.repository.ProductRepository;
 
 import java.io.IOException;
@@ -22,17 +23,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductService {
+    private static final int MAX_IMAGES_PER_PRODUCT = 8;
+    private static final int MIN_YEAR = 1900;
+    private static final int MAX_YEAR = 2100;
+    private static final Set<String> ALLOWED_IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList("jpg", "jpeg", "png", "webp", "avif"));
+    private static final Set<String> ALLOWED_IMAGE_CONTENT_TYPES = new HashSet<>(Arrays.asList("image/jpeg", "image/png", "image/webp", "image/avif"));
 
     private final ProductRepository productRepository;
+    private final OrderItemRepository orderItemRepository;
     private final CategoryService categoryService;
 
     @Value("${app.upload-dir:uploads}")
@@ -48,8 +58,12 @@ public class ProductService {
         String normalizedSearch = (search == null || search.isBlank())
                 ? null
                 : search.trim().toLowerCase(Locale.ROOT);
-        Page<Product> products = productRepository.findPublishedWithFilters(
-                Product.ProductStatus.PUBLISHED, categoryId, minPrice, maxPrice, condition, normalizedSearch, pageable);
+        List<Long> categoryIds = null;
+        if (categoryId != null && categoryId > 0) {
+            categoryIds = categoryService.collectCategoryTreeIds(categoryId);
+        }
+        Page<Product> products = productRepository.findPublishedWithCategoryTree(
+                Product.ProductStatus.PUBLISHED, categoryIds, minPrice, maxPrice, condition, normalizedSearch, pageable);
         return products.map(this::toDto);
     }
 
@@ -77,6 +91,8 @@ public class ProductService {
 
     @Transactional
     public Product create(Product product, User createdBy, List<MultipartFile> imageFiles) throws IOException {
+        validateProduct(product);
+        validateImages(imageFiles);
         product.setCreatedBy(createdBy);
         product.setCreatedAt(Instant.now());
         if (product.getSlug() == null || product.getSlug().isBlank()) {
@@ -100,6 +116,8 @@ public class ProductService {
         existing.setStatus(product.getStatus());
         existing.setYear(product.getYear());
         existing.setCategory(product.getCategory());
+        validateProduct(existing);
+        validateImages(newImages);
         if (newImages != null && !newImages.isEmpty()) {
             addImages(existing, newImages);
         }
@@ -121,7 +139,36 @@ public class ProductService {
         productRepository.save(p);
     }
 
+    @Transactional
+    public void delete(Long productId) throws IOException {
+        Product p = productRepository.findById(productId).orElseThrow();
+        orderItemRepository.unlinkProductByProductId(productId);
+        productRepository.delete(p);
+
+        Path productDir = Paths.get(uploadDir, "products", productId.toString());
+        deleteDirectoryQuietly(productDir);
+    }
+
+    private void deleteDirectoryQuietly(Path path) throws IOException {
+        if (!Files.exists(path)) {
+            return;
+        }
+        try (var stream = Files.walk(path)) {
+            stream.sorted((a, b) -> b.compareTo(a))
+                    .forEach(p -> {
+                        try {
+                            Files.deleteIfExists(p);
+                        } catch (IOException ignored) {
+                            // Ignore cleanup failures to avoid blocking deletion of entity.
+                        }
+                    });
+        }
+    }
+
     private void addImages(Product product, List<MultipartFile> files) throws IOException {
+        if (product.getImages().size() + files.stream().filter(f -> f != null && !f.isEmpty()).count() > MAX_IMAGES_PER_PRODUCT) {
+            throw new IllegalArgumentException("Можно загрузить не более " + MAX_IMAGES_PER_PRODUCT + " изображений");
+        }
         Path dir = Paths.get(uploadDir, "products", product.getId().toString());
         Files.createDirectories(dir);
         int order = product.getImages().size();
@@ -141,6 +188,40 @@ public class ProductService {
                     .build();
             product.getImages().add(img);
             first = false;
+        }
+    }
+
+    private void validateProduct(Product product) {
+        if (product.getName() == null || product.getName().isBlank()) {
+            throw new IllegalArgumentException("Название товара обязательно");
+        }
+        if (product.getPrice() == null || product.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Цена должна быть больше нуля");
+        }
+        if (product.getQuantity() < 0) {
+            throw new IllegalArgumentException("Количество не может быть отрицательным");
+        }
+        if (product.getYear() != null && (product.getYear() < MIN_YEAR || product.getYear() > MAX_YEAR)) {
+            throw new IllegalArgumentException("Некорректный год товара");
+        }
+        if (product.getCategory() == null || product.getCategory().getId() == null) {
+            throw new IllegalArgumentException("Категория обязательна");
+        }
+    }
+
+    private void validateImages(List<MultipartFile> files) {
+        if (files == null || files.isEmpty()) return;
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty()) continue;
+            String ext = getExtension(file.getOriginalFilename());
+            String normalizedExt = ext == null ? "" : ext.toLowerCase(Locale.ROOT);
+            if (!ALLOWED_IMAGE_EXTENSIONS.contains(normalizedExt)) {
+                throw new IllegalArgumentException("Разрешены только изображения JPG/PNG/WEBP");
+            }
+            String contentType = file.getContentType();
+            if (contentType == null || !ALLOWED_IMAGE_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
+                throw new IllegalArgumentException("Недопустимый тип файла изображения");
+            }
         }
     }
 

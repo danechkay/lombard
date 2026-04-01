@@ -49,7 +49,7 @@ public class CatalogApiController {
 
     @GetMapping("/categories")
     public List<CategoryDto> categories() {
-        return categoryService.findAllRoot();
+        return categoryService.findAllOrdered();
     }
 
     @GetMapping("/product/{slug}")

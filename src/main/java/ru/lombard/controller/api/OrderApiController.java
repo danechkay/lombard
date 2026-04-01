@@ -3,6 +3,7 @@ package ru.lombard.controller.api;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,7 +41,7 @@ public class OrderApiController {
                         "id", user.getId(),
                         "email", user.getEmail(),
                         "fullName", user.getFullName(),
-                        "phone", user.getPhone()
+                        "phone", user.getPhone() == null ? "" : user.getPhone()
                 ),
                 "cartItems", cartItems,
                 "total", cartService.getCartTotal(user.getId())
@@ -56,6 +57,21 @@ public class OrderApiController {
                     "message", "Заказ оформлен",
                     "orderId", order.getId()
             );
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    /**
+     * Псевдо-оплата для прототипа: переводит заказ владельца из NEW в PAID.
+     * Реальную интеграцию с платежной системой добавим позже.
+     */
+    @PostMapping("/{id}/mock-pay")
+    public Map<String, String> mockPay(@PathVariable Long id) {
+        User user = requireUser();
+        try {
+            var status = orderService.mockPay(user, id);
+            return Map.of("message", "Оплата успешна (тестовый режим)", "orderStatus", status.name());
         } catch (IllegalStateException e) {
             throw new ResponseStatusException(BAD_REQUEST, e.getMessage());
         }

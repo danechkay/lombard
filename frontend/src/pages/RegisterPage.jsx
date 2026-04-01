@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
+import { showToast } from "../toast";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -19,12 +20,14 @@ export default function RegisterPage() {
       const result = await api.register(form);
       if (result.error) {
         setError(result.error);
+        showToast(result.error, "error");
         return;
       }
-      alert(result.message || "Регистрация успешна");
+      showToast(result.message || "Регистрация успешна");
       navigate("/login");
     } catch (e) {
       setError(e.message);
+      showToast(e.message, "error");
     }
   };
 

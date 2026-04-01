@@ -37,7 +37,7 @@ server:
 # Загрузка файлов (фото товаров) — сохраняем в папку проекта
 app:
   upload-dir: ${user.dir}/uploads
-  catalog-page-size: 12
+  catalog-page-size: 15
 
 logging:
   level:

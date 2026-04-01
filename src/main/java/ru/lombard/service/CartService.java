@@ -42,16 +42,26 @@ public class CartService {
 
     @Transactional
     public void addToCart(Long userId, Long productId, int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Количество должно быть больше нуля");
+        }
         Product product = productRepository.findById(productId).orElseThrow();
         if (product.getStatus() != Product.ProductStatus.PUBLISHED) {
             throw new IllegalArgumentException("Товар недоступен для заказа");
         }
         cartItemRepository.findByUserIdAndProductId(userId, productId).ifPresentOrElse(
                 item -> {
-                    item.setQuantity(item.getQuantity() + quantity);
+                    int nextQuantity = item.getQuantity() + quantity;
+                    if (nextQuantity > product.getQuantity()) {
+                        throw new IllegalArgumentException("Недостаточно товара на складе");
+                    }
+                    item.setQuantity(nextQuantity);
                     cartItemRepository.save(item);
                 },
                 () -> {
+                    if (quantity > product.getQuantity()) {
+                        throw new IllegalArgumentException("Недостаточно товара на складе");
+                    }
                     CartItem item = CartItem.builder()
                             .user(User.builder().id(userId).build())
                             .product(product)
@@ -69,6 +79,9 @@ public class CartService {
         if (quantity <= 0) {
             cartItemRepository.delete(item);
             return;
+        }
+        if (quantity > item.getProduct().getQuantity()) {
+            throw new IllegalArgumentException("Недостаточно товара на складе");
         }
         item.setQuantity(quantity);
         cartItemRepository.save(item);

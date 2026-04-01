@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import Layout from "./components/Layout";
 import CatalogPage from "./pages/CatalogPage";
+import LandingPage from "./pages/LandingPage";
 import ProductPage from "./pages/ProductPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -12,10 +13,16 @@ import AccountPage from "./pages/AccountPage";
 import OrdersPage from "./pages/OrdersPage";
 import AdminPage from "./pages/AdminPage";
 import AdminProductsPage from "./pages/AdminProductsPage";
+import AdminPromotionsPage from "./pages/AdminPromotionsPage";
 import AdminCategoriesPage from "./pages/AdminCategoriesPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminValuationsPage from "./pages/AdminValuationsPage";
 import DepartmentsPage from "./pages/DepartmentsPage";
+import PromotionsPage from "./pages/PromotionsPage";
+import ValuationPage from "./pages/ValuationPage";
+import ValuationsPage from "./pages/ValuationsPage";
+import ToastContainer from "./components/ToastContainer";
 
 function ProtectedRoute({ user, children }) {
   if (!user?.authenticated) {
@@ -32,6 +39,7 @@ function RoleRoute({ user, roles, children }) {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
   const navigate = useNavigate();
 
   const loadUser = async () => {
@@ -47,6 +55,11 @@ export default function App() {
     loadUser();
   }, []);
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
   const handleLogout = async () => {
     try {
       await api.logout();
@@ -57,9 +70,24 @@ export default function App() {
   };
 
   return (
-    <Layout user={user} onLogout={handleLogout}>
+    <Layout
+      user={user}
+      onLogout={handleLogout}
+      theme={theme}
+      onToggleTheme={() => setTheme((prev) => (prev === "light" ? "dark" : "light"))}
+    >
       <Routes>
-        <Route path="/" element={<CatalogPage user={user} />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/catalog" element={<CatalogPage user={user} />} />
+        <Route path="/discounts" element={<PromotionsPage />} />
+        <Route
+          path="/valuation"
+          element={
+            <ProtectedRoute user={user}>
+              <ValuationPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/departments" element={<DepartmentsPage />} />
         <Route path="/product/:slug" element={<ProductPage user={user} />} />
         <Route
@@ -97,6 +125,14 @@ export default function App() {
           }
         />
         <Route
+          path="/account/valuations"
+          element={
+            <ProtectedRoute user={user}>
+              <ValuationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin"
           element={
             <RoleRoute user={user} roles={["ADMIN", "MANAGER"]}>
@@ -121,6 +157,14 @@ export default function App() {
           }
         />
         <Route
+          path="/admin/promotions"
+          element={
+            <RoleRoute user={user} roles={["ADMIN", "MANAGER"]}>
+              <AdminPromotionsPage />
+            </RoleRoute>
+          }
+        />
+        <Route
           path="/admin/orders"
           element={
             <RoleRoute user={user} roles={["ADMIN"]}>
@@ -136,7 +180,16 @@ export default function App() {
             </RoleRoute>
           }
         />
+        <Route
+          path="/admin/valuations"
+          element={
+            <RoleRoute user={user} roles={["ADMIN", "MANAGER"]}>
+              <AdminValuationsPage />
+            </RoleRoute>
+          }
+        />
       </Routes>
+      <ToastContainer />
     </Layout>
   );
 }

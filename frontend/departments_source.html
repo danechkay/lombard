@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/icons/kapital-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ломбард Капитал</title>
+    <meta
+      name="description"
+      content="Ломбард Капитал ✔ Ломбард Капитал официальный сайт ✔ Срочный займ под залог ✔ Выкуп ✅ Прием ✅ Деньги под залог в Крыму, Симферополе, Ялте"
+    />
+    <script type="module" crossorigin src="/assets/index-CAUCED6u.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CHv4V5Vp.css">
+  </head>
+  <style>
+    .cookie-alert {
+      position: fixed;
+      inset: 0;
+      background: #0000006b;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: end;
+      display: none;
+    }
+    .cookie-alert__inner {
+      border: 1px solid #dcdde3;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      background: #fff;
+      padding: 30px;
+      width: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+    .cookie-alert__text {
+      line-height: 1.5;
+    }
+    .cookie-alert__buttons {
+      display: flex;
+      gap: 10px;
+      height: fit-content;
+    }
+    .cookie__button {
+      height: fit-content;
+      width: fit-content;
+      padding: 15px 25px;
+      background: var(--accent-color);
+      color: var(--white-text);
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.1;
+      box-shadow: 0 0 15px 0 rgba(8, 14, 44, 0.1);
+      font-weight: 600;
+    }
+    .cookie__button--cancel {
+      background: #fff;
+      color: #000;
+    }
+    @media (max-width: 576px) {
+      .cookie-alert__inner {
+        flex-direction: column;
+      }
+    }
+  </style>
+  <body>
+    <div class="cookie-alert">
+      <div class="cookie-alert__inner">
+        <p class="cookie-alert__text">
+          Чтобы улучшить работу сайта и ваш опыт, мы используем куки.
+          Вы согласны на использование куки и передачу данных службам веб-аналитики?
+        </p>
+        <div class="cookie-alert__buttons">
+          <button class="cookie__button cookie__button--accept">Ок</button>
+          <button class="cookie__button cookie__button--cancel">Отмена</button>
+        </div>
+      </div>
+    </div>
+    <div id="app"></div>
+    <script>
+      const isCookieAccept = localStorage.getItem('isCookieAccepted');
+      const cookieAlert = document.querySelector('.cookie-alert');
+
+      const loadMetrika = () => {
+        (function (m, e, t, r, i, k, a) {
+          m[i] =
+            m[i] ||
+            function () {
+              (m[i].a = m[i].a || []).push(arguments);
+            };
+          m[i].l = 1 * new Date();
+          for (var j = 0; j < document.scripts.length; j++) {
+            if (document.scripts[j].src === r) {
+              return;
+            }
+          }
+          (k = e.createElement(t)),
+            (a = e.getElementsByTagName(t)[0]),
+            (k.async = 1),
+            (k.src = r),
+            a.parentNode.insertBefore(k, a);
+        })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym');
+
+        ym(99694438, 'init', {
+          clickmap: true,
+          trackLinks: true,
+          accurateTrackBounce: true,
+          webvisor: true,
+        });
+      };
+
+      const loadVkMetrika = () => {
+
+      };
+
+      if ((!isCookieAccept || isCookieAccept === 'false') && window.location.hash !== '#pwa') {
+        cookieAlert.style.display = 'flex';
+        cookieAlert.addEventListener('click', (e) => {
+          const target = e.target;
+          if (target.classList.contains('cookie__button--accept')) {
+            localStorage.setItem('isCookieAccepted', true);
+            cookieAlert.style.display = 'none';
+            loadMetrika();
+            loadVkMetrika();
+          } else if (target.classList.contains('cookie__button--cancel')) {
+            localStorage.setItem('isCookieAccepted', false);
+            cookieAlert.style.display = 'none';
+          }
+        });
+      } else {
+        loadMetrika();
+        loadVkMetrika();
+      }
+    </script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=e8d92391-38ce-447a-a62f-3caa85a4dea4&lang=ru_RU"></script>
+  </body>
+</html>

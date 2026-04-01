@@ -40,15 +40,23 @@ public class OrderService {
                 .build();
         order = orderRepository.save(order);
         for (CartItem ci : cartItems) {
+            Product product = ci.getProduct();
+            if (product.getStatus() != Product.ProductStatus.PUBLISHED) {
+                throw new IllegalStateException("Один из товаров больше недоступен");
+            }
+            if (ci.getQuantity() > product.getQuantity()) {
+                throw new IllegalStateException("Недостаточно товара на складе");
+            }
             OrderItem oi = OrderItem.builder()
                     .order(order)
-                    .product(ci.getProduct())
-                    .productName(ci.getProduct().getName())
-                    .price(ci.getProduct().getPrice())
+                    .product(product)
+                    .productName(product.getName())
+                    .price(product.getPrice())
                     .quantity(ci.getQuantity())
                     .build();
             order.getItems().add(oi);
-            total = total.add(ci.getProduct().getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
+            total = total.add(product.getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
+            product.setQuantity(product.getQuantity() - ci.getQuantity());
         }
         order.setTotalAmount(total);
         orderRepository.save(order);
@@ -82,8 +90,43 @@ public class OrderService {
     @Transactional
     public void updateStatus(Long orderId, Order.OrderStatus status) {
         Order order = orderRepository.findById(orderId).orElseThrow();
+        if (!isTransitionAllowed(order.getOrderStatus(), status)) {
+            throw new IllegalArgumentException("Недопустимый переход статуса заказа");
+        }
         order.setOrderStatus(status);
         orderRepository.save(order);
+    }
+
+    /**
+     * Псевдо-оплата для прототипа: переводит заказ владельца из NEW в PAID.
+     * Настоящую интеграцию с платежной системой добавим позже.
+     */
+    @Transactional
+    public Order.OrderStatus mockPay(User currentUser, Long orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow();
+
+        // Защита от попыток оплатить чужой заказ.
+        if (!order.getUser().getId().equals(currentUser.getId())) {
+            throw new IllegalStateException("Нельзя оплатить заказ другого пользователя");
+        }
+
+        if (!isTransitionAllowed(order.getOrderStatus(), Order.OrderStatus.PAID)) {
+            throw new IllegalStateException("Оплата недоступна для текущего статуса заказа");
+        }
+
+        order.setOrderStatus(Order.OrderStatus.PAID);
+        orderRepository.save(order);
+        return order.getOrderStatus();
+    }
+
+    private boolean isTransitionAllowed(Order.OrderStatus from, Order.OrderStatus to) {
+        if (from == to) return true;
+        return switch (from) {
+            case NEW -> to == Order.OrderStatus.PAID || to == Order.OrderStatus.CANCELLED;
+            case PAID -> to == Order.OrderStatus.SHIPPED || to == Order.OrderStatus.CANCELLED;
+            case SHIPPED -> to == Order.OrderStatus.COMPLETED;
+            case COMPLETED, CANCELLED -> false;
+        };
     }
 
     public OrderDto toDto(Order o) {

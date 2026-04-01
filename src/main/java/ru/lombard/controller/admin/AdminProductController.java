@@ -128,4 +128,15 @@ public class AdminProductController {
         ra.addFlashAttribute("message", "Товар снят с публикации.");
         return "redirect:/admin/products";
     }
+
+    @PostMapping("/delete/{id}")
+    public String delete(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            productService.delete(id);
+            ra.addFlashAttribute("message", "Товар удален.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/products";
+    }
 }

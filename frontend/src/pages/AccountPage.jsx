@@ -24,6 +24,10 @@ export default function AccountPage() {
         <Link to="/account/orders" className="cta-link">
           Мои заказы
         </Link>
+        <div style={{ height: 10 }} />
+        <Link to="/account/valuations" className="cta-link">
+          Мои оценки
+        </Link>
       </div>
     </section>
   );

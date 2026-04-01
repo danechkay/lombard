@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api";
+import { showToast } from "../toast";
 
 export default function ProductPage({ user }) {
   const { slug } = useParams();
@@ -15,7 +16,19 @@ export default function ProductPage({ user }) {
   }, [slug]);
 
   if (error) return <p className="error">{error}</p>;
-  if (!product) return <p>Загрузка...</p>;
+  if (!product) {
+    return (
+      <section className="details-grid">
+        <div className="details-media skeleton skeleton-block" />
+        <div className="details-info">
+          <div className="skeleton skeleton-line" />
+          <div className="skeleton skeleton-line short" />
+          <div className="skeleton skeleton-line medium" />
+          <div className="skeleton skeleton-line" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section>
@@ -35,9 +48,9 @@ export default function ProductPage({ user }) {
               onClick={async () => {
                 try {
                   await api.addToCart({ productId: product.id, quantity: 1 });
-                  alert("Товар добавлен в корзину");
+                  showToast("Товар добавлен в корзину");
                 } catch (e) {
-                  alert(e.message);
+                  showToast(e.message, "error");
                 }
               }}
             >

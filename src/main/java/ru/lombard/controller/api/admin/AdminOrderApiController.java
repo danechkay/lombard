@@ -4,11 +4,13 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.lombard.dto.OrderDto;
 import ru.lombard.entity.Order;
 import ru.lombard.service.OrderService;
 
 import java.util.Map;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
 @RequestMapping("/api/admin/orders")
@@ -30,12 +32,23 @@ public class AdminOrderApiController {
 
     @PostMapping("/{id}/status")
     public Map<String, String> updateStatus(@PathVariable Long id, @RequestBody StatusRequest request) {
-        orderService.updateStatus(id, Order.OrderStatus.valueOf(request.getStatus()));
+        orderService.updateStatus(id, parseEnum(Order.OrderStatus.class, request.getStatus(), "Некорректный статус заказа"));
         return Map.of("message", "Статус заказа обновлен");
     }
 
     @Data
     public static class StatusRequest {
         private String status;
+    }
+
+    private static <E extends Enum<E>> E parseEnum(Class<E> enumClass, String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, message);
+        }
+        try {
+            return Enum.valueOf(enumClass, value.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(BAD_REQUEST, message);
+        }
     }
 }

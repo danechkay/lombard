@@ -4,11 +4,13 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.lombard.entity.User;
 import ru.lombard.repository.UserRepository;
 
 import java.util.List;
 import java.util.Map;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -51,7 +53,7 @@ public class AdminUserApiController {
     @PostMapping("/{id}/role")
     public Map<String, String> changeRole(@PathVariable Long id, @RequestBody RoleRequest request) {
         User user = userRepository.findById(id).orElseThrow();
-        user.setRole(User.Role.valueOf(request.getRole()));
+        user.setRole(parseEnum(User.Role.class, request.getRole(), "Некорректная роль"));
         userRepository.save(user);
         return Map.of("message", "Роль обновлена");
     }
@@ -69,4 +71,15 @@ public class AdminUserApiController {
             String role,
             boolean blocked
     ) {}
+
+    private static <E extends Enum<E>> E parseEnum(Class<E> enumClass, String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, message);
+        }
+        try {
+            return Enum.valueOf(enumClass, value.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(BAD_REQUEST, message);
+        }
+    }
 }

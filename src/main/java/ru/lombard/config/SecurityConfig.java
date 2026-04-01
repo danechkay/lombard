@@ -27,10 +27,11 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/catalog", "/catalog/**", "/product/**", "/login", "/register", "/css/**", "/js/**", "/uploads/**", "/images/**").permitAll()
-                        .requestMatchers("/api/catalog/**", "/api/auth/register", "/api/auth/me").permitAll()
+                        .requestMatchers("/api/catalog/**", "/api/promotions/**", "/api/auth/register", "/api/auth/me").permitAll()
                         .requestMatchers("/api/admin/users/**", "/api/admin/orders/**", "/api/admin/settings/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/cart/**", "/api/order/**", "/api/account/**", "/api/auth/logout").authenticated()
+                        .requestMatchers("/api/valuation/**").authenticated()
                         .requestMatchers("/admin/users/**", "/admin/orders/**", "/admin/settings/**").hasRole("ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/cart/**", "/order/**", "/account/**").authenticated()
@@ -46,7 +47,11 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/")
                         .permitAll()
                 )
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**")); // если понадобится API
+                .csrf(csrf -> csrf.ignoringRequestMatchers(
+                        "/api/**",
+                        "/login",
+                        "/logout"
+                )); // SPA-вход через fetch идет без CSRF-токена
         return http.build();
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.lombard.entity.User;
 import ru.lombard.service.CurrentUserService;
 import ru.lombard.service.OrderService;
+import ru.lombard.service.ValuationRequestService;
 
 import java.util.Map;
 
@@ -20,6 +21,7 @@ public class AccountApiController {
 
     private final CurrentUserService currentUserService;
     private final OrderService orderService;
+    private final ValuationRequestService valuationRequestService;
 
     @GetMapping
     public Map<String, Object> account() {
@@ -28,8 +30,8 @@ public class AccountApiController {
                 "id", user.getId(),
                 "email", user.getEmail(),
                 "fullName", user.getFullName(),
-                "phone", user.getPhone(),
-                "role", user.getRole().name()
+                "phone", user.getPhone() == null ? "" : user.getPhone(),
+                "role", user.getRole() == null ? "USER" : user.getRole().name()
         );
     }
 
@@ -37,6 +39,13 @@ public class AccountApiController {
     public Object orders() {
         User user = requireUser();
         return orderService.findOrdersByUser(user.getId(), 50);
+    }
+
+    @GetMapping("/valuations")
+    public Object valuations() {
+        User user = requireUser();
+        // Для простоты вернем первую страницу (можно расширить пагинацией позже).
+        return valuationRequestService.findByUser(user.getId(), 0, 50);
     }
 
     private User requireUser() {

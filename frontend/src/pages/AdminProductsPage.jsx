@@ -9,7 +9,11 @@ function toFormData(form, withStatus = false) {
   fd.set("condition", form.condition);
   fd.set("price", form.price);
   fd.set("quantity", form.quantity);
-  if (form.year) fd.set("year", form.year);
+  // Год: отправляем только если это корректное положительное число
+  const yearNumber = parseInt(form.year, 10);
+  if (!Number.isNaN(yearNumber) && yearNumber > 0) {
+    fd.set("year", String(yearNumber));
+  }
   if (withStatus) fd.set("status", form.status);
   if (form.images?.length) {
     Array.from(form.images).forEach((file) => fd.append("images", file));
@@ -34,12 +38,21 @@ export default function AdminProductsPage() {
   });
 
   const load = async () => {
-    const [productsPage, categoriesList] = await Promise.all([
-      api.adminProducts("page=0"),
-      api.adminCategories()
-    ]);
-    setProducts(productsPage.content || []);
-    setCategories(categoriesList || []);
+    try {
+      const [items, categoriesList] = await Promise.all([
+        api.adminProducts("page=0"),
+        api.adminCategories()
+      ]);
+      setProducts(items || []);
+      setCategories(categoriesList || []);
+    } catch (error) {
+      // временно выводим ошибку в консоль и в alert,
+      // чтобы понять, почему не грузятся товары
+      // (403/500/ошибка сети и т.п.)
+      // eslint-disable-next-line no-console
+      console.error("Ошибка загрузки товаров админки:", error);
+      window.alert(`Не удалось загрузить список товаров: ${error.message}`);
+    }
   };
 
   useEffect(() => {
@@ -48,9 +61,15 @@ export default function AdminProductsPage() {
 
   const create = async (event) => {
     event.preventDefault();
-    await api.adminCreateProduct(toFormData(form, false));
-    setForm({ ...form, name: "", description: "", price: "", year: "", images: null });
-    await load();
+    try {
+      await api.adminCreateProduct(toFormData(form, false));
+      setForm({ ...form, name: "", description: "", price: "", year: "", images: null });
+      await load();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Ошибка создания товара:", error);
+      window.alert(`Не удалось создать товар: ${error.message}`);
+    }
   };
 
   const loadProduct = async (id) => {
@@ -72,7 +91,34 @@ export default function AdminProductsPage() {
   const update = async (event) => {
     event.preventDefault();
     if (!selectedId) return;
-    await api.adminUpdateProduct(selectedId, toFormData(form, true));
+    try {
+      await api.adminUpdateProduct(selectedId, toFormData(form, true));
+      await load();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Ошибка обновления товара:", error);
+      window.alert(`Не удалось сохранить товар: ${error.message}`);
+    }
+  };
+
+  const remove = async (id) => {
+    const confirmed = window.confirm("Удалить товар из базы полностью?");
+    if (!confirmed) return;
+    await api.adminDeleteProduct(id);
+    if (selectedId === id) {
+      setSelectedId(null);
+      setForm({
+        name: "",
+        description: "",
+        categoryId: "",
+        condition: "USED",
+        price: "",
+        quantity: 1,
+        year: "",
+        status: "DRAFT",
+        images: null
+      });
+    }
     await load();
   };
 
@@ -93,6 +139,9 @@ export default function AdminProductsPage() {
             </button>
             <button type="button" onClick={() => api.adminUnpublishProduct(p.id).then(load)}>
               Снять с публикации
+            </button>
+            <button type="button" onClick={() => remove(p.id)}>
+              Удалить
             </button>
           </article>
         ))}

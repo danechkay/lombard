@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
+import { showToast } from "../toast";
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
@@ -14,9 +15,11 @@ export default function LoginPage({ onLoginSuccess }) {
     try {
       await api.login({ email, password });
       await onLoginSuccess();
+      showToast("Вход выполнен успешно");
       navigate("/");
     } catch (e) {
       setError(e.message);
+      showToast(e.message, "error");
     }
   };
 

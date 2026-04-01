@@ -19,7 +19,7 @@ public class AdminCategoryApiController {
 
     @GetMapping
     public List<CategoryDto> list() {
-        return categoryService.findAllRoot();
+        return categoryService.findAllOrdered();
     }
 
     @PostMapping

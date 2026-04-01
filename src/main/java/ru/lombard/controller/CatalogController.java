@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.lombard.dto.ProductDto;
+import ru.lombard.dto.CategoryDto;
+import ru.lombard.entity.Category;
 import ru.lombard.entity.Product;
 import ru.lombard.service.CartService;
 import ru.lombard.service.CategoryService;
@@ -16,7 +19,9 @@ import ru.lombard.service.CurrentUserService;
 import ru.lombard.service.ProductService;
 
 import java.math.BigDecimal;
-import java.security.Principal;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/catalog")
@@ -45,8 +50,34 @@ public class CatalogController {
             } catch (IllegalArgumentException ignored) {}
         }
         Page<ProductDto> products = productService.findPublished(categoryId, minPrice, maxPrice, cond, search, page);
+        List<CategoryDto> allCategories = categoryService.findAllOrdered();
+        List<CategoryDto> rootCategories = allCategories.stream()
+                .filter(c -> c.getParentId() == null)
+                .collect(Collectors.toList());
+        Map<Long, List<CategoryDto>> childrenByParent = allCategories.stream()
+                .filter(c -> c.getParentId() != null)
+                .collect(Collectors.groupingBy(CategoryDto::getParentId));
+
+        Long selectedRootId = null;
+        List<CategoryDto> subCategories = List.of();
+        if (categoryId != null) {
+            CategoryDto selected = allCategories.stream()
+                    .filter(c -> categoryId.equals(c.getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (selected != null) {
+                selectedRootId = selected.getParentId() == null ? selected.getId() : selected.getParentId();
+            }
+            if (selectedRootId != null) {
+                subCategories = childrenByParent.getOrDefault(selectedRootId, List.of());
+            }
+        }
+
         model.addAttribute("products", products);
-        model.addAttribute("categories", categoryService.findAllRoot());
+        model.addAttribute("categories", allCategories);
+        model.addAttribute("rootCategories", rootCategories);
+        model.addAttribute("subCategories", subCategories);
+        model.addAttribute("selectedRootId", selectedRootId);
         model.addAttribute("categoryId", categoryId);
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
@@ -57,6 +88,17 @@ public class CatalogController {
             model.addAttribute("cartCount", cartService.getCartCount(userId));
         }
         return "catalog";
+    }
+
+    @GetMapping("/category/{slug}")
+    public String catalogByCategorySlug(@PathVariable String slug, RedirectAttributes redirectAttributes) {
+        Category category = categoryService.findBySlug(slug).orElse(null);
+        if (category == null) {
+            return "redirect:/catalog";
+        }
+        redirectAttributes.addAttribute("categoryId", category.getId());
+        redirectAttributes.addAttribute("page", 0);
+        return "redirect:/catalog";
     }
 
     @GetMapping("/product/{slug}")

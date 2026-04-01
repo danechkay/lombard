@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 import ru.lombard.dto.ProductDto;
 import ru.lombard.entity.Product;
@@ -21,6 +22,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
 @RequestMapping("/api/admin/products")
@@ -59,7 +62,7 @@ public class AdminProductApiController {
                 .name(name)
                 .description(description)
                 .category(category)
-                .condition(Product.Condition.valueOf(condition.toUpperCase()))
+                .condition(parseEnum(Product.Condition.class, condition, "Некорректное состояние товара"))
                 .price(price)
                 .quantity(quantity)
                 .year(year)
@@ -79,7 +82,7 @@ public class AdminProductApiController {
             @RequestParam BigDecimal price,
             @RequestParam(defaultValue = "1") int quantity,
             @RequestParam(required = false) Integer year,
-            @RequestParam String status,
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) MultipartFile[] images
     ) throws Exception {
         Product product = productService.findById(id).orElseThrow();
@@ -87,11 +90,18 @@ public class AdminProductApiController {
         product.setName(name);
         product.setDescription(description);
         product.setCategory(category);
-        product.setCondition(Product.Condition.valueOf(condition.toUpperCase()));
+        product.setCondition(parseEnum(Product.Condition.class, condition, "Некорректное состояние товара"));
         product.setPrice(price);
         product.setQuantity(quantity);
         product.setYear(year);
-        product.setStatus(Product.ProductStatus.valueOf(status.toUpperCase()));
+        if (status != null && !status.isBlank()) {
+            try {
+                product.setStatus(parseEnum(Product.ProductStatus.class, status, "Некорректный статус товара"));
+            } catch (ResponseStatusException ex) {
+                // Если пришёл некорректный статус из SPA, просто игнорируем его
+                // и оставляем текущий статус товара, чтобы не падать с 400.
+            }
+        }
         productService.update(product, images != null ? List.of(images) : new ArrayList<>());
         return Map.of("message", "Товар обновлен");
     }
@@ -106,5 +116,22 @@ public class AdminProductApiController {
     public Map<String, String> unpublish(@PathVariable Long id) {
         productService.unpublish(id);
         return Map.of("message", "Товар снят с публикации");
+    }
+
+    @PostMapping("/{id}/delete")
+    public Map<String, String> delete(@PathVariable Long id) throws Exception {
+        productService.delete(id);
+        return Map.of("message", "Товар удален");
+    }
+
+    private static <E extends Enum<E>> E parseEnum(Class<E> enumClass, String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, message);
+        }
+        try {
+            return Enum.valueOf(enumClass, value.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(BAD_REQUEST, message);
+        }
     }
 }

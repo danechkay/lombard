@@ -14,15 +14,37 @@
         <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / Каталог</nav>
 
         <div class="catalog-filters">
+            <div style="margin-top:0.25rem; color:#6b5d4f; font-size:0.9rem;">Разделы:</div>
+            <div class="quick-categories" style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <a th:href="@{/catalog(page=0)}"
+                   class="btn btn-secondary active"
+                   th:attr="data-nav=@{/catalog(page=0)}"
+                   onclick="window.location.href=this.dataset.nav; return false;"
+                   style="padding:0.35rem 0.7rem; background:#8b6914; color:#fff;">Все товары</a>
+                <a th:each="c : ${rootCategories}"
+                   th:href="@{/catalog(categoryId=${c.id}, page=0)}"
+                   class="btn btn-secondary"
+                   th:attr="data-nav=@{/catalog(categoryId=${c.id}, page=0)}"
+                   onclick="window.location.href=this.dataset.nav; return false;"
+                   th:classappend="${selectedRootId != null && selectedRootId eq c.id ? ' active' : ''}"
+                   style="padding:0.35rem 0.7rem;"
+                   th:text="${c.name}">Категория</a>
+            </div>
+            <div th:if="${!subCategories.isEmpty()}" style="margin-top:0.75rem; color:#6b5d4f; font-size:0.9rem;">Подкатегории:</div>
+            <div th:if="${!subCategories.isEmpty()}" class="quick-categories" style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <a th:each="c : ${subCategories}"
+                   th:href="@{/catalog(categoryId=${c.id}, page=0)}"
+                   class="btn btn-secondary"
+                   th:attr="data-nav=@{/catalog(categoryId=${c.id}, page=0)}"
+                   onclick="window.location.href=this.dataset.nav; return false;"
+                   th:classappend="${categoryId != null && categoryId eq c.id ? ' active' : ''}"
+                   style="padding:0.35rem 0.7rem;"
+                   th:text="${c.name}">Подкатегория</a>
+            </div>
+
             <form th:action="@{/catalog}" method="get" class="filters-form">
                 <input type="hidden" name="page" value="0"/>
-                <div><label>Категория</label>
-                    <select name="categoryId">
-                        <option value="">Все</option>
-                        <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"
-                                th:selected="${categoryId != null && categoryId == c.id}"></option>
-                    </select>
-                </div>
+                <input type="hidden" name="categoryId" th:value="${categoryId}"/>
                 <div><label>Цена от</label><input type="number" name="minPrice" th:value="${minPrice}" placeholder="0" step="0.01"/></div>
                 <div><label>Цена до</label><input type="number" name="maxPrice" th:value="${maxPrice}" placeholder="∞" step="0.01"/></div>
                 <div><label>Состояние</label>
@@ -45,11 +67,12 @@
                     </div>
                     <div class="info">
                         <div class="name" th:text="${p.name}">Название</div>
-                        <div class="price" th:text="${#numbers.formatDecimal(p.price, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</div>
+                        <div class="price"
+                             th:text="${#numbers.formatDecimal(p.price, 1, 'WHITESPACE', 0, 'POINT') + ' ₽'}">0 ₽</div>
                         <div class="condition" th:text="${p.condition.name() == 'NEW' ? 'Новое' : 'Б/У'}">Б/У</div>
                     </div>
                 </a>
-                <div class="info" style="padding-top: 0;">
+                <div class="info product-card-actions" style="padding-top: 0;">
                     <form sec:authorize="isAuthenticated()" th:action="@{/cart/add}" method="post" style="display:inline;">
                         <input type="hidden" name="productId" th:value="${p.id}"/>
                         <input type="hidden" name="quantity" value="1"/>
