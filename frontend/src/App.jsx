@@ -10,7 +10,6 @@ import CheckoutPage from "./pages/CheckoutPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AccountPage from "./pages/AccountPage";
-import OrdersPage from "./pages/OrdersPage";
 import AdminPage from "./pages/AdminPage";
 import AdminProductsPage from "./pages/AdminProductsPage";
 import AdminPromotionsPage from "./pages/AdminPromotionsPage";
@@ -18,6 +17,7 @@ import AdminCategoriesPage from "./pages/AdminCategoriesPage";
 import AdminOrdersPage from "./pages/AdminOrdersPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminValuationsPage from "./pages/AdminValuationsPage";
+import AdminLoansPage from "./pages/AdminLoansPage";
 import DepartmentsPage from "./pages/DepartmentsPage";
 import PromotionsPage from "./pages/PromotionsPage";
 import ValuationPage from "./pages/ValuationPage";
@@ -120,7 +120,7 @@ export default function App() {
           path="/account/orders"
           element={
             <ProtectedRoute user={user}>
-              <OrdersPage />
+              <Navigate to="/account" replace />
             </ProtectedRoute>
           }
         />
@@ -167,7 +167,7 @@ export default function App() {
         <Route
           path="/admin/orders"
           element={
-            <RoleRoute user={user} roles={["ADMIN"]}>
+            <RoleRoute user={user} roles={["ADMIN", "MANAGER"]}>
               <AdminOrdersPage />
             </RoleRoute>
           }
@@ -185,6 +185,14 @@ export default function App() {
           element={
             <RoleRoute user={user} roles={["ADMIN", "MANAGER"]}>
               <AdminValuationsPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path="/admin/loans"
+          element={
+            <RoleRoute user={user} roles={["ADMIN", "MANAGER"]}>
+              <AdminLoansPage />
             </RoleRoute>
           }
         />

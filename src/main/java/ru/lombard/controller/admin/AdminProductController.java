@@ -9,6 +9,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.lombard.entity.Product;
 import ru.lombard.entity.User;
+import ru.lombard.entity.Store;
+import ru.lombard.repository.StoreRepository;
 import ru.lombard.service.CategoryService;
 import ru.lombard.service.CurrentUserService;
 import ru.lombard.service.ProductService;
@@ -23,6 +25,7 @@ public class AdminProductController {
 
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final StoreRepository storeRepository;
     private final CurrentUserService currentUserService;
 
     @GetMapping
@@ -37,6 +40,7 @@ public class AdminProductController {
     public String newForm(Model model) {
         model.addAttribute("product", new Product());
         model.addAttribute("categories", categoryService.findAllRootEntities());
+        model.addAttribute("stores", storeRepository.findByActiveTrueOrderBySortOrderAscIdAsc());
         return "admin/product-form";
     }
 
@@ -45,6 +49,7 @@ public class AdminProductController {
             @RequestParam String name,
             @RequestParam(required = false) String description,
             @RequestParam Long categoryId,
+            @RequestParam Long storeId,
             @RequestParam String condition,
             @RequestParam java.math.BigDecimal price,
             @RequestParam(defaultValue = "1") int quantity,
@@ -54,10 +59,12 @@ public class AdminProductController {
     ) {
         User user = currentUserService.getCurrentUser().orElseThrow();
         var category = categoryService.findById(categoryId).orElseThrow();
+        Store store = storeRepository.findById(storeId).filter(Store::isActive).orElseThrow();
         Product product = Product.builder()
                 .name(name)
                 .description(description)
                 .category(category)
+                .store(store)
                 .condition(Product.Condition.valueOf(condition.toUpperCase()))
                 .price(price)
                 .quantity(quantity)
@@ -79,6 +86,7 @@ public class AdminProductController {
         Product product = productService.findById(id).orElseThrow();
         model.addAttribute("product", product);
         model.addAttribute("categories", categoryService.findAllRootEntities());
+        model.addAttribute("stores", storeRepository.findByActiveTrueOrderBySortOrderAscIdAsc());
         return "admin/product-form";
     }
 
@@ -88,6 +96,7 @@ public class AdminProductController {
             @RequestParam String name,
             @RequestParam(required = false) String description,
             @RequestParam Long categoryId,
+            @RequestParam Long storeId,
             @RequestParam String condition,
             @RequestParam java.math.BigDecimal price,
             @RequestParam(defaultValue = "1") int quantity,
@@ -98,9 +107,11 @@ public class AdminProductController {
     ) {
         Product product = productService.findById(id).orElseThrow();
         var category = categoryService.findById(categoryId).orElseThrow();
+        Store store = storeRepository.findById(storeId).filter(Store::isActive).orElseThrow();
         product.setName(name);
         product.setDescription(description);
         product.setCategory(category);
+        product.setStore(store);
         product.setCondition(Product.Condition.valueOf(condition.toUpperCase()));
         product.setPrice(price);
         product.setQuantity(quantity);

@@ -39,6 +39,7 @@ export default function PaymentModal({ orderId, amount, receipt: receiptProp, on
         orderStatus: result?.orderStatus || "PAID",
         paidAt: new Date().toISOString(),
         txId: `MOCK-${Math.random().toString(16).slice(2, 10).toUpperCase()}`,
+        pickupCode: result?.pickupCode || "",
         amount: amount ?? null
       });
       setPhase("RECEIPT");
@@ -110,6 +111,11 @@ export default function PaymentModal({ orderId, amount, receipt: receiptProp, on
                 <p style={{ margin: "8px 0 0" }}>
                   Реквизит: <b>{receipt.txId}</b>
                 </p>
+                {receipt.pickupCode ? (
+                  <p style={{ margin: "8px 0 0" }}>
+                    Код выдачи: <b>{receipt.pickupCode}</b>
+                  </p>
+                ) : null}
                 <p style={{ margin: "8px 0 0" }}>
                   Дата: <b>{new Date(receipt.paidAt).toLocaleString("ru-RU")}</b>
                 </p>

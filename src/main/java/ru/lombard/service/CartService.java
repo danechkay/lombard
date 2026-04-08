@@ -49,6 +49,16 @@ public class CartService {
         if (product.getStatus() != Product.ProductStatus.PUBLISHED) {
             throw new IllegalArgumentException("Товар недоступен для заказа");
         }
+        List<CartItem> cartItems = cartItemRepository.findByUserIdOrderByAddedAtDesc(userId);
+        if (!cartItems.isEmpty()) {
+            Long cartStoreId = cartItems.get(0).getProduct().getStore() != null
+                    ? cartItems.get(0).getProduct().getStore().getId()
+                    : null;
+            Long nextStoreId = product.getStore() != null ? product.getStore().getId() : null;
+            if (cartStoreId != null && nextStoreId != null && !cartStoreId.equals(nextStoreId)) {
+                throw new IllegalArgumentException("Нельзя добавить товар из другого магазина в текущую корзину");
+            }
+        }
         cartItemRepository.findByUserIdAndProductId(userId, productId).ifPresentOrElse(
                 item -> {
                     int nextQuantity = item.getQuantity() + quantity;

@@ -57,6 +57,7 @@ public class ValuationService {
                 categoryId,
                 null,
                 null,
+                null,
                 condition,
                 search,
                 pageableByPrice
@@ -69,6 +70,7 @@ public class ValuationService {
             Page<Product> page2 = productRepository.findPublishedWithFilters(
                     Product.ProductStatus.PUBLISHED,
                     categoryId,
+                    null,
                     null,
                     null,
                     condition,

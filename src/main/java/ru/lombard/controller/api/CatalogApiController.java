@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import ru.lombard.dto.CategoryDto;
 import ru.lombard.dto.ProductDto;
+import ru.lombard.dto.StoreDto;
 import ru.lombard.entity.Product;
 import ru.lombard.service.CategoryService;
 import ru.lombard.service.ProductService;
+import ru.lombard.service.StoreService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,10 +28,12 @@ public class CatalogApiController {
 
     private final ProductService productService;
     private final CategoryService categoryService;
+    private final StoreService storeService;
 
     @GetMapping
     public Page<ProductDto> catalog(
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long storeId,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String condition,
@@ -44,7 +48,12 @@ public class CatalogApiController {
                 cond = null;
             }
         }
-        return productService.findPublished(categoryId, minPrice, maxPrice, cond, search, page);
+        return productService.findPublished(categoryId, storeId, minPrice, maxPrice, cond, search, page);
+    }
+
+    @GetMapping("/stores")
+    public List<StoreDto> stores() {
+        return storeService.listActive();
     }
 
     @GetMapping("/categories")

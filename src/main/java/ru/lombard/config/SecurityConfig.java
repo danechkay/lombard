@@ -10,6 +10,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -23,16 +28,35 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://*.trycloudflare.com"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/catalog", "/catalog/**", "/product/**", "/login", "/register", "/css/**", "/js/**", "/uploads/**", "/images/**").permitAll()
                         .requestMatchers("/api/catalog/**", "/api/promotions/**", "/api/auth/register", "/api/auth/me").permitAll()
-                        .requestMatchers("/api/admin/users/**", "/api/admin/orders/**", "/api/admin/settings/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/users/**", "/api/admin/settings/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/cart/**", "/api/order/**", "/api/account/**", "/api/auth/logout").authenticated()
                         .requestMatchers("/api/valuation/**").authenticated()
-                        .requestMatchers("/admin/users/**", "/admin/orders/**", "/admin/settings/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/users/**", "/admin/settings/**").hasRole("ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/cart/**", "/order/**", "/account/**").authenticated()
                         .anyRequest().authenticated()

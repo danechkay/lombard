@@ -6,21 +6,32 @@ import { showToast } from "../toast";
 export default function CatalogPage({ user }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
+  const [stores, setStores] = useState([]);
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const [sessionShuffleSeed] = useState(() => {
+    const key = "catalog-shuffle-seed-v1";
+    try {
+      const existing = window.sessionStorage.getItem(key);
+      if (existing) return existing;
+      const generated = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      window.sessionStorage.setItem(key, generated);
+      return generated;
+    } catch {
+      return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  });
 
   const page = Number(searchParams.get("page") || 0);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [activeRootId, setActiveRootId] = useState(null);
   const selectedCategoryId = searchParams.get("categoryId") || "";
+  const selectedStoreId = searchParams.get("storeId") || "";
   const categoryQuery = searchParams.get("categorySearch") || "";
 
   useEffect(() => {
-    setMobileFiltersOpen(false);
-  }, [searchParams]);
-
-  useEffect(() => {
     api.getCategories().then(setCategories).catch(() => setCategories([]));
+    api.getStores().then(setStores).catch(() => setStores([]));
   }, []);
 
   const categoryTree = useMemo(() => {
@@ -89,7 +100,7 @@ export default function CatalogPage({ user }) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const next = new URLSearchParams();
-    ["categoryId", "categorySearch", "minPrice", "maxPrice", "condition", "search"].forEach((key) => {
+    ["categoryId", "categorySearch", "storeId", "minPrice", "maxPrice", "condition", "search"].forEach((key) => {
       const value = form.get(key);
       if (value) {
         next.set(key, value.toString());
@@ -97,6 +108,7 @@ export default function CatalogPage({ user }) {
     });
     next.set("page", "0");
     setSearchParams(next);
+    setMobileFiltersOpen(false);
   };
 
   const clearAll = () => {
@@ -115,14 +127,45 @@ export default function CatalogPage({ user }) {
     return `${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 0 }).format(num)} ₽`;
   };
 
+  const visibleProducts = useMemo(() => {
+    const items = data?.content || [];
+    if (!items.length) return items;
+
+    // Для "Все товары" показываем перемешанный список из разных категорий
+    // с фиксированным порядком в рамках одной сессии.
+    if (!selectedCategoryId) {
+      const hash = (text) => {
+        let h = 0;
+        for (let i = 0; i < text.length; i += 1) {
+          h = (h * 31 + text.charCodeAt(i)) >>> 0;
+        }
+        return h;
+      };
+      return [...items].sort((a, b) => {
+        const ak = hash(`${sessionShuffleSeed}:${a.id}:${a.slug || ""}`);
+        const bk = hash(`${sessionShuffleSeed}:${b.id}:${b.slug || ""}`);
+        return ak - bk;
+      });
+    }
+    return items;
+  }, [data, selectedCategoryId, sessionShuffleSeed]);
+
+  const applyCategorySelection = (categoryId) => {
+    const next = new URLSearchParams(searchParams);
+    if (!categoryId) {
+      next.delete("categoryId");
+    } else {
+      next.set("categoryId", String(categoryId));
+    }
+    next.set("page", "0");
+    setSearchParams(next);
+  };
+
   return (
     <section className="catalog-page">
       <div className="catalog-head">
         <div>
           <h1>Каталог</h1>
-          <p className="muted-text catalog-subtitle">
-            Товары в центре, ровная сетка 3 × 5.
-          </p>
         </div>
         <div className="catalog-head-actions">
           <button type="button" className="btn btn-sm mobile-filter-open" onClick={() => setMobileFiltersOpen(true)}>
@@ -155,10 +198,7 @@ export default function CatalogPage({ user }) {
                   type="button"
                   className={`avito-root-item ${selectedCategoryId ? "" : "is-selected"}`}
                   onClick={() => {
-                    const next = new URLSearchParams(searchParams);
-                    next.delete("categoryId");
-                    next.set("page", "0");
-                    setSearchParams(next);
+                    applyCategorySelection(null);
                   }}
                 >
                   <span>Все товары</span>
@@ -167,13 +207,18 @@ export default function CatalogPage({ user }) {
                   <button
                     key={root.id}
                     type="button"
-                    className={`avito-root-item ${Number(activeRootCategory?.id) === Number(root.id) ? "is-active" : ""}`}
+                    className={`avito-root-item ${
+                      selectedCategoryId && Number(activeRootCategory?.id) === Number(root.id) ? "is-active" : ""
+                    }`}
                     onClick={() => {
+                      // Клик по корневой категории сразу переключает каталог на эту категорию,
+                      // даже если до этого была выбрана подкатегория другого раздела.
                       setActiveRootId(Number(root.id));
+                      applyCategorySelection(root.id);
                     }}
                   >
                     <span>{root.name}</span>
-                    <span className="avito-root-arrow">›</span>
+                    <span className="avito-root-arrow" aria-hidden />
                   </button>
                 ))}
               </div>
@@ -186,10 +231,7 @@ export default function CatalogPage({ user }) {
                       type="button"
                       className={`avito-sub-item top ${String(activeRootCategory.id) === String(selectedCategoryId) ? "is-selected" : ""}`}
                       onClick={() => {
-                        const next = new URLSearchParams(searchParams);
-                        next.set("categoryId", String(activeRootCategory.id));
-                        next.set("page", "0");
-                        setSearchParams(next);
+                        applyCategorySelection(activeRootCategory.id);
                       }}
                     >
                       Все в категории
@@ -201,10 +243,7 @@ export default function CatalogPage({ user }) {
                           type="button"
                           className={`avito-sub-item ${String(child.id) === String(selectedCategoryId) ? "is-selected" : ""}`}
                           onClick={() => {
-                            const next = new URLSearchParams(searchParams);
-                            next.set("categoryId", String(child.id));
-                            next.set("page", "0");
-                            setSearchParams(next);
+                            applyCategorySelection(child.id);
                           }}
                         >
                           {child.name}
@@ -218,6 +257,17 @@ export default function CatalogPage({ user }) {
               </div>
               <input type="hidden" name="categoryId" value={selectedCategoryId} />
             </div>
+            <label className="field">
+              <span>Магазин</span>
+              <select name="storeId" defaultValue={selectedStoreId}>
+                <option value="">Все магазины</option>
+                {stores.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="field">
               <span>Поиск товара</span>
               <input
@@ -255,14 +305,7 @@ export default function CatalogPage({ user }) {
               </label>
             </div>
             <div className="filter-actions">
-              <button
-                type="submit"
-                onClick={() => {
-                  setMobileFiltersOpen(false);
-                }}
-              >
-                Применить
-              </button>
+              <button type="submit">Применить</button>
               <button type="button" className="btn btn-ghost" onClick={clearAll}>
                 Сбросить
               </button>
@@ -284,14 +327,17 @@ export default function CatalogPage({ user }) {
                   <div className="skeleton skeleton-line medium" />
                 </article>
               ))}
-            {data?.content?.map((p) => (
+            {visibleProducts.map((p) => (
               <article key={p.id} className="card product-card product-card-compact">
                 <Link to={`/product/${p.slug}`} className="product-cover">
                   {p.mainImageUrl ? <img src={p.mainImageUrl} alt={p.name} /> : <div className="img-fallback" />}
                 </Link>
                 <div className="product-body">
                   <h3 className="product-title">{p.name}</h3>
-                  <p className="product-subtitle">{p.categoryName}</p>
+                  <p className="product-subtitle">
+                    {p.categoryName}
+                    {p.storeName ? ` · ${p.storeName}` : ""}
+                  </p>
                   <div className="product-bottom">
                     <div className="price">{formatPrice(p.price)}</div>
                     <Link to={`/product/${p.slug}`} className="btn btn-sm btn-ghost">

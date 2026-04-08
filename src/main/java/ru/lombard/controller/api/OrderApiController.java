@@ -70,8 +70,12 @@ public class OrderApiController {
     public Map<String, String> mockPay(@PathVariable Long id) {
         User user = requireUser();
         try {
-            var status = orderService.mockPay(user, id);
-            return Map.of("message", "Оплата успешна (тестовый режим)", "orderStatus", status.name());
+            var order = orderService.mockPay(user, id);
+            return Map.of(
+                    "message", "Оплата успешна (тестовый режим)",
+                    "orderStatus", order.getOrderStatus().name(),
+                    "pickupCode", order.getPickupCode() == null ? "" : order.getPickupCode()
+            );
         } catch (IllegalStateException e) {
             throw new ResponseStatusException(BAD_REQUEST, e.getMessage());
         }

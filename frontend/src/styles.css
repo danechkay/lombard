@@ -3,6 +3,7 @@
 }
 
 :root {
+  color-scheme: light;
   --bg: #f7f7f8;
   --text: #191919;
   --muted: #72757d;
@@ -17,9 +18,12 @@
   --radius-lg: 18px;
   --radius-md: 14px;
   --radius-sm: 12px;
+  --scrollbar-thumb: rgba(100, 106, 120, 0.45);
+  --scrollbar-track: transparent;
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #101214;
   --text: #f3f4f6;
   --muted: #9ca3af;
@@ -27,6 +31,8 @@
   --black: #f3f4f6;
   --border: #2a2f35;
   --surface-muted: #1b1f24;
+  --scrollbar-thumb: rgba(156, 163, 175, 0.42);
+  --scrollbar-track: transparent;
 }
 
 body {
@@ -35,6 +41,67 @@ body {
   background: var(--bg);
   color: var(--text);
   line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Нативный скроллбар (Chrome/Edge) — без светлой «полосы» в тёмной теме */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--scrollbar-thumb) 75%, var(--text) 35%);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Фокус с мыши не рисуем системную светлую рамку; для клавиатуры — аккуратный outline */
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus,
+summary:focus {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid rgba(215, 38, 56, 0.5);
+  outline-offset: 2px;
+}
+
+button,
+a,
+[role="button"],
+label,
+summary {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .app {
@@ -698,19 +765,68 @@ textarea {
   border: 1px solid #d1d5db;
   border-radius: 9px;
   font: inherit;
-  background: #fff;
+  background-color: #fff;
   color: var(--black);
 }
 
+/* Светлая тема: явная стрелка у выпадающих списков (как в тёмной), без `background` shorthand — не сбрасывает icon */
+select:not([multiple]):not([size]) {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 18px 18px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+/* select вынесен отдельно: shorthand `background` сбрасывал стрелку и усиливал светлую обводку Chromium */
 [data-theme="dark"] .grid-form input,
-[data-theme="dark"] .grid-form select,
 [data-theme="dark"] .form input,
-[data-theme="dark"] .form select,
 [data-theme="dark"] textarea,
 [data-theme="dark"] .search-input {
   background: #0f1215;
   border-color: var(--border);
   color: var(--text);
+}
+
+[data-theme="dark"] .grid-form select,
+[data-theme="dark"] .form select {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* `.form button` выше задаёт белый фон и перебивает `.btn` — в тёмной теме кнопки «Отмена» и т.п. пропадали */
+[data-theme="dark"] .form button:not(.btn-primary),
+[data-theme="dark"] .grid-form button:not(.btn-primary) {
+  background: #252b33;
+  border: 1px solid var(--border);
+  color: #f3f4f6;
+}
+
+[data-theme="dark"] .form button:not(.btn-primary):hover,
+[data-theme="dark"] .grid-form button:not(.btn-primary):hover {
+  background: #323a45;
+  border-color: rgba(215, 38, 56, 0.55);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(215, 38, 56, 0.3);
+}
+
+[data-theme="dark"] .form button.btn-primary,
+[data-theme="dark"] .grid-form button.btn-primary {
+  background: var(--red);
+  border-color: transparent;
+  color: #fff;
+}
+
+[data-theme="dark"] .form button.btn-primary:hover,
+[data-theme="dark"] .grid-form button.btn-primary:hover {
+  background: var(--red-dark);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(215, 38, 56, 0.35);
 }
 
 [data-theme="dark"] .form input::placeholder,
@@ -726,6 +842,11 @@ button {
   cursor: pointer;
   transition: opacity 0.2s ease, background 0.2s ease;
   font-weight: 600;
+}
+
+/* Firefox: убирает внутреннюю «светлую» кайму у кнопок */
+button::-moz-focus-inner {
+  border: 0;
 }
 
 button:hover {
@@ -1180,6 +1301,27 @@ button:disabled {
   margin-bottom: 12px;
 }
 
+.cart-empty {
+  text-align: center;
+  padding: 22px 16px;
+}
+
+.cart-empty-title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cart-empty-text {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+
+.cart-empty-link {
+  width: auto;
+  padding: 8px 12px;
+}
+
 .row-actions {
   display: flex;
   gap: 8px;
@@ -1205,7 +1347,7 @@ button:disabled {
   display: grid;
   gap: 14px;
   width: 100%;
-  margin: 0;
+  margin: -8px 0 0;
 }
 
 .catalog-head {
@@ -1213,6 +1355,13 @@ button:disabled {
   align-items: flex-end;
   justify-content: space-between;
   gap: 12px;
+}
+
+/* Заголовок должен быть над блоком фильтров.
+   Блок фильтров сдвигается влево через `margin-left` у `.catalog-filters`,
+   поэтому смещаем только левую колонку заголовка на ту же величину. */
+.catalog-head > div:first-child {
+  margin-left: -400px;
 }
 
 .catalog-subtitle {
@@ -1231,18 +1380,40 @@ button:disabled {
 
 .catalog-layout {
   display: grid;
-  grid-template-columns: 420px minmax(0, 860px) minmax(0, 420px);
+  /* 3-колоночный десктопный layout:
+     центральная колонка задает точное центрирование карточек (2-я карточка по центру),
+     боковые колонки — симметричные буферы под фильтры/пустоту. */
+  /* Делаем боковые треки симметричными и позволяющими "схлопываться"
+     (контент фильтров может переполнять ячейку), чтобы центральные карточки
+     оставались строго по центру экрана. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 860px) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
-  justify-content: center;
+  /* Чтобы раздача колонок шла от краёв контейнера и не добавляла лишних буферов. */
+  justify-content: stretch;
 }
 
 .catalog-filters {
   position: sticky;
-  top: 92px;
+  top: 78px;
+  align-self: start;
   justify-self: start;
-  width: 100%;
+  /* Фильтры должны быть широкими, чтобы подкатегории читались.
+     Если боковая ячейка меньше — контент переполняется наружу. */
+  width: 520px;
+  min-width: 520px;
+  max-width: none;
+  /* Не уезжать под низ окна: внутренняя прокрутка (кнопки «Применить» всегда доступны). */
+  max-height: calc(100dvh - 86px);
+  max-height: calc(100vh - 86px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-bottom: 6px;
   grid-column: 1;
+  /* Привязываем фильтры к левому краю экрана (сдвиг относительно padding `.container`). */
+  margin-left: -400px;
 }
 
 .catalog-main {
@@ -1254,6 +1425,7 @@ button:disabled {
 }
 
 .catalog-grid.v2 {
+  /* Строго 3 колонки для точного центрирования второй карточки */
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
@@ -1289,9 +1461,44 @@ button:disabled {
   border: 1px solid #d1d5db;
   border-radius: 9px;
   font: inherit;
-  background: #fff;
+  background-color: #fff;
   color: var(--black);
   box-sizing: border-box;
+}
+
+.filter-card select {
+  padding-right: 40px;
+}
+
+/*
+ * `html[data-theme="dark"]` — выше специфичность, чем у `.filter-card select` / `.valuation-form select`,
+ * иначе позже в файле снова включается белый `background` из светлой вёрстки.
+ * Chromium/Windows: нативный select даёт светлую рамку и полосу у системной стрелки.
+ */
+html[data-theme="dark"] select {
+  color-scheme: dark;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #0f1215;
+  color: var(--text);
+  border: 1px solid var(--border);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  background-size: 18px 18px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+html[data-theme="dark"] select:hover {
+  border-color: color-mix(in srgb, var(--border) 70%, var(--muted));
+}
+
+html[data-theme="dark"] select option,
+html[data-theme="dark"] select optgroup {
+  background-color: #303841;
+  color: var(--text);
 }
 
 .filter-card input::placeholder {
@@ -1309,23 +1516,8 @@ button:disabled {
 [data-theme="dark"] .filter-card textarea:focus,
 [data-theme="dark"] .filter-card textarea:focus-visible {
   outline: none;
-  box-shadow: none;
-  border-color: var(--border);
-}
-
-[data-theme="dark"] .filter-card select {
-  background: #0f1215;
-  border-color: var(--border);
-  color: var(--text);
-}
-
-[data-theme="dark"] .filter-card select:hover {
-  border-color: var(--border);
-}
-
-[data-theme="dark"] .filter-card select option {
-  background: var(--bg);
-  color: var(--text);
+  border-color: rgba(215, 38, 56, 0.45);
+  box-shadow: 0 0 0 1px rgba(215, 38, 56, 0.22);
 }
 
 .category-dropdown {
@@ -1479,7 +1671,7 @@ button:disabled {
 
 [data-theme="dark"] .filter-card input,
 [data-theme="dark"] .filter-card select {
-  background: #0f1215;
+  background-color: #0f1215;
   border-color: var(--border);
   color: var(--text);
 }
@@ -1511,14 +1703,22 @@ button:disabled {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: 8px;
+  position: sticky;
+  bottom: 0;
+  padding-top: 12px;
+  padding-bottom: 4px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--white) 40%, transparent), var(--white) 22px);
+  z-index: 2;
+  box-shadow: 0 -10px 24px color-mix(in srgb, var(--white) 70%, transparent);
 }
 
 .avito-tree {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--white);
-  min-height: 460px;
+  min-height: 0;
+  max-height: min(420px, 48vh);
   display: grid;
   grid-template-columns: 210px 1fr;
   overflow: hidden;
@@ -1528,7 +1728,7 @@ button:disabled {
   border-right: 1px solid var(--border);
   display: grid;
   align-content: start;
-  max-height: 390px;
+  max-height: min(360px, 44vh);
   overflow: auto;
   padding: 6px;
   gap: 4px;
@@ -1551,6 +1751,11 @@ button:disabled {
   gap: 8px;
 }
 
+.avito-root-item > span:first-of-type {
+  min-width: 0;
+  text-align: left;
+}
+
 .avito-root-item:hover,
 .avito-root-item.is-active,
 .avito-root-item.is-selected {
@@ -1558,10 +1763,13 @@ button:disabled {
   border-color: rgba(215, 38, 56, 0.25);
 }
 
-.avito-root-arrow {
-  color: var(--muted);
-  font-size: 16px;
-  line-height: 1;
+.avito-root-item .avito-root-arrow {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  opacity: 0.9;
 }
 
 .avito-tree-content {
@@ -1569,6 +1777,10 @@ button:disabled {
   display: grid;
   align-content: start;
   gap: 10px;
+  min-height: 0;
+  max-height: min(360px, 44vh);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .avito-tree-title {
@@ -1579,7 +1791,7 @@ button:disabled {
 
 .avito-sub-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 6px;
 }
 
@@ -1795,6 +2007,18 @@ section {
 
   .catalog-filters {
     position: static;
+    margin-left: 0;
+  }
+
+  /* На мобильной раскладке фильтры возвращаются на обычное место. */
+  .catalog-head > div:first-child {
+    margin-left: 0;
+  }
+
+  /* Убираем строгие 3 колонки на средних ширинах,
+     чтобы карточки не становились слишком узкими. */
+  .catalog-grid.v2 {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   }
 
   .catalog-head {
@@ -1812,10 +2036,30 @@ section {
 
 @media (max-width: 768px) {
   .container {
-    padding-bottom: 90px;
+    padding: 14px max(14px, env(safe-area-inset-left)) calc(90px + env(safe-area-inset-bottom, 0px))
+      max(14px, env(safe-area-inset-right));
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .header {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    background: color-mix(in srgb, var(--white) 86%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  [data-theme="dark"] .header {
+    background: color-mix(in srgb, var(--white) 78%, transparent);
   }
 
   .mobile-menu-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1859,29 +2103,46 @@ section {
     z-index: 60;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 4px;
-    padding: 8px;
-    background: color-mix(in srgb, var(--white) 92%, transparent);
+    gap: 2px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+    background: color-mix(in srgb, var(--white) 94%, transparent);
     border-top: 1px solid var(--border);
-    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 -4px 24px rgba(17, 17, 17, 0.06);
   }
 
   .mobile-bottom-nav a {
     text-decoration: none;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     text-align: center;
-    padding: 8px 4px;
+    padding: 8px 2px;
     border-radius: 10px;
+    line-height: 1.2;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .mobile-bottom-nav a.active {
     background: rgba(215, 38, 56, 0.12);
+    color: var(--red);
   }
 
   .mobile-filter-open {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    font-weight: 650;
   }
 
   .mobile-filters-head {
@@ -1893,34 +2154,282 @@ section {
 
   .catalog-filters {
     display: none;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
   }
 
+  /* Нижняя шторка фильтров в духе маркетплейсов */
   .catalog-filters.is-open {
     display: block;
     position: fixed;
-    left: 10px;
-    right: 10px;
-    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
     z-index: 80;
-    max-height: calc(100vh - 156px);
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    margin: 0 !important;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .catalog-filters.is-open .filter-card {
+    border-radius: 18px 18px 0 0;
+    margin: 0;
+    border-bottom: none;
+    box-shadow: 0 -16px 48px rgba(5, 7, 10, 0.22);
+    max-height: min(90dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 24px));
     overflow: auto;
+    padding: 12px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
   }
 
   .catalog-filters.is-open .filter-title {
     display: none;
   }
 
+  .catalog-filters.is-open .mobile-filters-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: -12px -16px 12px;
+    padding: 12px 16px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+  }
+
+  [data-theme="dark"] .catalog-filters.is-open .mobile-filters-head {
+    background: #0f1215;
+  }
+
+  .catalog-filters.is-open .mobile-filters-head strong {
+    font-size: 17px;
+    letter-spacing: -0.2px;
+  }
+
   .mobile-filters-backdrop {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(5, 7, 10, 0.45);
+    background: rgba(5, 7, 10, 0.5);
     z-index: 70;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .container {
-    padding-top: 18px;
-    padding-bottom: 90px;
+  .catalog-page .catalog-head {
+    position: sticky;
+    top: 52px;
+    z-index: 19;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-left: calc(-1 * max(14px, env(safe-area-inset-left)));
+    margin-right: calc(-1 * max(14px, env(safe-area-inset-right)));
+    margin-bottom: 12px;
+    padding: 10px max(14px, env(safe-area-inset-left)) 12px max(14px, env(safe-area-inset-right));
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .catalog-page .catalog-head h1 {
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: -0.3px;
+  }
+
+  .catalog-main {
+    margin-left: calc(-1 * max(14px, env(safe-area-inset-left)));
+    margin-right: calc(-1 * max(14px, env(safe-area-inset-right)));
+    width: auto;
+    max-width: none;
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
+
+  /* Двухколоночная сетка объявлений как на мобильном Avito */
+  .catalog-main .catalog-grid.v2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px;
+  }
+
+  .catalog-main .product-card-compact {
+    border-radius: 14px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 2px 12px rgba(17, 17, 17, 0.04);
+    border-color: #e6e7eb;
+  }
+
+  [data-theme="dark"] .catalog-main .product-card-compact {
+    border-color: var(--border);
+    box-shadow: none;
+  }
+
+  .catalog-main .product-card .product-title {
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.3;
+    margin-top: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
+  }
+
+  .catalog-main .product-card .product-subtitle {
+    font-size: 11px;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .catalog-main .product-card .product-body {
+    padding: 8px 10px 10px;
+  }
+
+  .catalog-main .product-card .product-bottom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .catalog-main .product-card .product-bottom .btn {
+    width: 100%;
+    min-height: 40px;
+    justify-content: center;
+  }
+
+  .catalog-main .product-card .product-bottom .price {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0;
+    order: -1;
+  }
+
+  .catalog-main .product-card .btn-primary,
+  .catalog-main .product-card .card-link {
+    width: 100%;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 6px !important;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  .catalog-main .product-card .product-bottom .btn-ghost {
+    display: none;
+  }
+
+  .landing-page .product-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .landing-page .product-strip .product-card .product-bottom .btn-ghost {
+    display: none;
+  }
+
+  .landing-page .product-strip .product-title {
+    font-size: 13px;
+    font-weight: 650;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .landing-page .product-strip .product-body {
+    padding: 8px 10px 10px;
+  }
+
+  .landing-page .product-strip .price {
+    font-size: 15px;
+  }
+
+  .toast-stack {
+    top: auto;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+
+  .pager.v2 .btn {
+    min-height: 44px;
+    border-radius: 12px;
+  }
+
+  .product-detail-page .details-grid {
+    gap: 12px;
+  }
+
+  .product-detail-page .details-media {
+    padding: 0;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .product-detail-page .details-media .product-image {
+    width: 100%;
+    display: block;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
+  .product-detail-page .details-info {
+    border-radius: 16px;
+    padding: 16px 16px 20px;
+  }
+
+  .product-detail-page .details-info h1 {
+    font-size: 22px;
+    line-height: 1.2;
+    letter-spacing: -0.2px;
+    margin-bottom: 8px;
+  }
+
+  .product-detail-page .details-info .price {
+    font-size: 26px;
+    margin: 12px 0;
+  }
+
+  .product-detail-page .details-info .meta {
+    font-size: 13px;
+  }
+
+  .product-detail-page .details-info p:not(.meta):not(.price) {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text);
+    margin: 12px 0 0;
+  }
+
+  .product-detail-page .details-info button,
+  .product-detail-page .details-info .card-link {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 12px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
+    font-size: 15px;
+    font-weight: 650;
+    box-sizing: border-box;
   }
 
   .topbar-inner {
@@ -1948,12 +2457,16 @@ section {
     padding: 8px 10px;
   }
 
-  .cards,
-  .catalog-grid,
-  .catalog-grid.v2,
+  .cards:not(.catalog-grid),
+  .catalog-grid:not(.v2),
   .product-strip {
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 10px;
+  }
+
+  /* Сетка каталога задаётся отдельно (2 колонки); админка — через .admin-products-cards */
+  .admin-products-cards.catalog-grid.v2 {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) !important;
   }
 
   .product-body {
@@ -2017,6 +2530,10 @@ section {
     font-size: 28px;
   }
 
+  .catalog-page .catalog-head h1 {
+    font-size: 19px;
+  }
+
   h2 {
     font-size: 22px;
   }
@@ -2031,11 +2548,23 @@ section {
     font-size: 12px;
   }
 
-  .cards,
-  .catalog-grid,
-  .catalog-grid.v2,
+  .cards:not(.catalog-grid),
   .product-strip {
     grid-template-columns: 1fr;
+  }
+
+  .catalog-main .catalog-grid.v2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px;
+  }
+
+  .landing-page .product-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px;
+  }
+
+  .admin-products-cards.catalog-grid.v2 {
+    grid-template-columns: 1fr !important;
   }
 
   .cart-row {
@@ -2129,6 +2658,117 @@ section {
   justify-content: flex-end;
 }
 
+.admin-products-page {
+  /* Растягиваем страницу админки на ширину экрана, чтобы было место под 5 колонок */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.admin-products-title {
+  margin-left: 10px;
+}
+
+.admin-products-layout {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.admin-products-sidebar {
+  width: 320px;
+  min-width: 300px;
+  position: sticky;
+  top: 16px;
+  justify-self: start;
+  max-width: none;
+  overflow: visible;
+  /* фильтры должны быть прижаты к левой стенке экрана */
+  margin-left: 10px;
+}
+
+.admin-products-sidebar .btn {
+  width: 100%;
+}
+
+.admin-products-main {
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  /* чуть уменьшаем доступную ширину товаров */
+  margin-right: 10px;
+}
+
+.admin-products-cards {
+  margin-top: 0;
+  /* grid-template-columns берём из `.catalog-grid.v2` */
+}
+
+.admin-products-cards.catalog-grid.v2 {
+  /* как в каталоге по карточке (240px min), но строго 5 колонок */
+  grid-template-columns: repeat(5, minmax(240px, 1fr));
+}
+
+@media (max-width: 1320px) {
+  .admin-products-cards.catalog-grid.v2 {
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .admin-products-cards.catalog-grid.v2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-products-modal {
+  /* компактнее, как “маленькая страница” */
+  width: min(640px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-products-modal .modal-body {
+  padding: 16px 16px 10px;
+  overflow-y: auto;
+}
+
+.admin-products-modal .form {
+  max-width: none;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.admin-products-modal .modal-actions {
+  padding: 12px 0 0;
+}
+
+.admin-products-modal .form textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+@media (max-width: 900px) {
+  .admin-products-layout {
+    flex-direction: column;
+  }
+
+  .admin-products-sidebar {
+    width: 100%;
+    min-width: 0;
+    position: static;
+    margin-left: 0;
+  }
+
+  .admin-products-sidebar .filter-card {
+    margin-top: 10px;
+  }
+}
+
 .mock-payment-pill {
   display: inline-flex;
   align-items: center;
@@ -2176,24 +2816,32 @@ section {
   border: 1px solid #d1d5db;
   border-radius: 9px;
   font: inherit;
-  background: #fff;
+  background-color: #fff;
   color: var(--black);
   box-sizing: border-box;
+}
+
+.valuation-form select {
+  padding-right: 40px;
 }
 
 .valuation-form input::placeholder {
   color: var(--muted);
 }
 
-[data-theme="dark"] .valuation-form input,
-[data-theme="dark"] .valuation-form select {
+[data-theme="dark"] .valuation-form input {
   background: #0f1215;
   border-color: var(--border);
   color: var(--text);
 }
 
+[data-theme="dark"] .valuation-form select {
+  border-color: var(--border);
+  color: var(--text);
+}
+
 [data-theme="dark"] .valuation-form select option {
-  background: var(--bg);
+  background-color: #1a1f26;
   color: var(--text);
 }
 
@@ -2203,5 +2851,193 @@ section {
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.loan-account-page {
+  display: grid;
+  gap: 14px;
+}
+
+.loan-top-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.loan-profile {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.loan-profile-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(215, 38, 56, 0.12);
+  color: var(--red);
+  font-weight: 800;
+}
+
+.loan-sensitive-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.loan-active-card {
+  display: grid;
+  gap: 10px;
+}
+
+.loan-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-green {
+  background: rgba(22, 163, 74, 0.15);
+  color: #166534;
+}
+
+.status-yellow {
+  background: rgba(202, 138, 4, 0.16);
+  color: #854d0e;
+}
+
+.status-red {
+  background: rgba(220, 38, 38, 0.16);
+  color: #991b1b;
+}
+
+.loan-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+.loan-summary-grid p {
+  margin: 0;
+}
+
+.loan-overdue {
+  color: #dc2626;
+  font-weight: 700;
+  margin: 0;
+}
+
+.loan-main-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.loan-main-actions .btn {
+  min-height: 40px;
+}
+
+.loan-notifications {
+  display: grid;
+  gap: 8px;
+}
+
+.loan-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-muted);
+}
+
+.loan-history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.loan-history-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.loan-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.loan-history-card p {
+  margin: 0 0 6px;
+}
+
+.loan-doc-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.loan-doc-group summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.loan-doc-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.loan-doc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .loan-top-grid,
+  .loan-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .loan-history-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .loan-history-filters {
+    width: 100%;
+  }
+
+  .loan-history-filters select {
+    flex: 1 1 0;
+  }
+
+  .loan-main-actions .btn {
+    width: 100%;
+  }
 }
 

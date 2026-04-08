@@ -24,6 +24,11 @@
                 <h1 th:text="${product.name}">Название</h1>
                 <div class="price" th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0 ₽</div>
                 <p><strong>Состояние:</strong> <span th:text="${product.condition.name() == 'NEW' ? 'Новое' : 'Б/У'}">Б/У</span></p>
+                <p th:if="${product.storeName != null || product.storeAddress != null}">
+                    <strong>Магазин:</strong>
+                    <span th:text="${product.storeName}">—</span>
+                    <span th:if="${product.storeAddress != null}" th:text="' — ' + ${product.storeAddress}"></span>
+                </p>
                 <p th:if="${product.year != null}"><strong>Год:</strong> <span th:text="${product.year}"></span></p>
                 <p th:if="${product.description != null}" class="description" th:text="${product.description}">Описание</p>
                 <p sec:authorize="isAuthenticated()">

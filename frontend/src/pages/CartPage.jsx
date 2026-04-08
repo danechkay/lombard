@@ -26,8 +26,14 @@ export default function CartPage() {
     <section>
       <h1>Корзина</h1>
       {cart.items.length === 0 ? (
-        <div className="panel">
-          <p>Корзина пуста</p>
+        <div className="panel cart-empty">
+          <p className="cart-empty-title">Корзина сейчас пуста</p>
+          <p className="cart-empty-text">
+            Добавьте понравившиеся товары из каталога, и они появятся здесь.
+          </p>
+          <Link to="/catalog" className="btn btn-sm cart-empty-link">
+            Перейти в каталог
+          </Link>
         </div>
       ) : (
         <>

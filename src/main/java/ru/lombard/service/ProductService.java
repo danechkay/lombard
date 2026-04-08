@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.lombard.dto.ProductDto;
 import ru.lombard.entity.Product;
 import ru.lombard.entity.ProductImage;
+import ru.lombard.entity.Store;
 import ru.lombard.entity.User;
 import ru.lombard.repository.OrderItemRepository;
 import ru.lombard.repository.ProductRepository;
@@ -52,23 +53,28 @@ public class ProductService {
     private int pageSize;
 
     @Transactional(readOnly = true)
-    public Page<ProductDto> findPublished(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice,
+    public Page<ProductDto> findPublished(Long categoryId, Long storeId, BigDecimal minPrice, BigDecimal maxPrice,
                                           Product.Condition condition, String search, int page) {
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by("publishedAt").descending().and(Sort.by("id").descending()));
         String normalizedSearch = (search == null || search.isBlank())
                 ? null
                 : search.trim().toLowerCase(Locale.ROOT);
+        Long effectiveStoreId = (storeId != null && storeId > 0) ? storeId : null;
         List<Long> categoryIds = null;
         if (categoryId != null && categoryId > 0) {
             categoryIds = categoryService.collectCategoryTreeIds(categoryId);
         }
         Page<Product> products = productRepository.findPublishedWithCategoryTree(
-                Product.ProductStatus.PUBLISHED, categoryIds, minPrice, maxPrice, condition, normalizedSearch, pageable);
+                Product.ProductStatus.PUBLISHED, categoryIds, effectiveStoreId, minPrice, maxPrice, condition, normalizedSearch, pageable);
         return products.map(this::toDto);
     }
 
     public Page<Product> findAllForAdmin(int page, int size) {
         return productRepository.findAllWithCategory(PageRequest.of(page, size, Sort.by("createdAt").descending()));
+    }
+
+    public Page<Product> findAllForStoreAdmin(Long storeId, int page, int size) {
+        return productRepository.findAllWithCategoryByStoreId(storeId, PageRequest.of(page, size, Sort.by("createdAt").descending()));
     }
 
     public Optional<Product> findById(Long id) {
@@ -116,6 +122,7 @@ public class ProductService {
         existing.setStatus(product.getStatus());
         existing.setYear(product.getYear());
         existing.setCategory(product.getCategory());
+        existing.setStore(product.getStore());
         validateProduct(existing);
         validateImages(newImages);
         if (newImages != null && !newImages.isEmpty()) {
@@ -207,6 +214,9 @@ public class ProductService {
         if (product.getCategory() == null || product.getCategory().getId() == null) {
             throw new IllegalArgumentException("Категория обязательна");
         }
+        if (product.getStore() == null || product.getStore().getId() == null) {
+            throw new IllegalArgumentException("Магазин обязателен");
+        }
     }
 
     private void validateImages(List<MultipartFile> files) {
@@ -244,6 +254,7 @@ public class ProductService {
         List<String> urls = p.getImages().stream().map(ProductImage::getImageUrl).collect(Collectors.toList());
         String mainUrl = p.getImages().stream().filter(ProductImage::isMain).map(ProductImage::getImageUrl).findFirst()
                 .orElseGet(() -> p.getImages().isEmpty() ? null : p.getImages().get(0).getImageUrl());
+        Store st = p.getStore();
         return ProductDto.builder()
                 .id(p.getId())
                 .name(p.getName())
@@ -257,6 +268,9 @@ public class ProductService {
                 .viewsCount(p.getViewsCount())
                 .categoryId(p.getCategory().getId())
                 .categoryName(p.getCategory().getName())
+                .storeId(st != null ? st.getId() : null)
+                .storeName(st != null ? st.getName() : null)
+                .storeAddress(st != null ? st.getAddress() : null)
                 .createdAt(p.getCreatedAt())
                 .publishedAt(p.getPublishedAt())
                 .imageUrls(urls)

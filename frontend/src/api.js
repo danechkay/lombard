@@ -68,6 +68,7 @@ export const api = {
     }
   },
   getCategories: () => request("/api/catalog/categories"),
+  getStores: () => request("/api/catalog/stores"),
   getCatalog: (queryString) => request(`/api/catalog${queryString ? `?${queryString}` : ""}`),
   getProduct: (slug) => request(`/api/catalog/product/${slug}`),
   getPromotions: () => request("/api/promotions"),
@@ -79,7 +80,14 @@ export const api = {
   placeOrder: (payload) => request("/api/order/place", { method: "POST", body: JSON.stringify(payload) }),
   mockPayOrder: (orderId) => request(`/api/order/${orderId}/mock-pay`, { method: "POST" }),
   getAccount: () => request("/api/account"),
+  updateAccountPhone: (phone) => request("/api/account/phone", { method: "POST", body: JSON.stringify({ phone }) }),
   getOrders: () => request("/api/account/orders"),
+  getMyLoans: () => request("/api/account/loans"),
+  adminLoanUsers: (queryString) => request(`/api/admin/loans/users${queryString ? `?${queryString}` : ""}`),
+  adminSendLoanCode: (userId) => request("/api/admin/loans/send-code", { method: "POST", body: JSON.stringify({ userId }) }),
+  adminVerifyLoanCode: (userId, sessionId, code) =>
+    request("/api/admin/loans/verify-code", { method: "POST", body: JSON.stringify({ userId, sessionId, code }) }),
+  adminCreateLoan: (payload) => request("/api/admin/loans", { method: "POST", body: JSON.stringify(payload) }),
   calculateValuation: (payload) =>
     request("/api/valuation/calculate", { method: "POST", body: JSON.stringify(payload) }),
   createValuationRequest: (payload) =>
@@ -129,11 +137,11 @@ export const api = {
   adminOrderById: (id) => request(`/api/admin/orders/${id}`),
   adminOrderStatus: (id, status) =>
     request(`/api/admin/orders/${id}/status`, { method: "POST", body: JSON.stringify({ status }) }),
-  adminUsers: () => request("/api/admin/users"),
+  adminUsers: (queryString) => request(`/api/admin/users${queryString ? `?${queryString}` : ""}`),
   adminBlockUser: (id) => request(`/api/admin/users/${id}/block`, { method: "POST", body: "{}" }),
   adminUnblockUser: (id) => request(`/api/admin/users/${id}/unblock`, { method: "POST", body: "{}" }),
-  adminUserRole: (id, role) =>
-    request(`/api/admin/users/${id}/role`, { method: "POST", body: JSON.stringify({ role }) }),
+  adminUserRole: (id, role, storeId = null) =>
+    request(`/api/admin/users/${id}/role`, { method: "POST", body: JSON.stringify({ role, storeId }) }),
   adminPromotions: () => request("/api/admin/promotions"),
   adminCreatePromotion: (payload) =>
     request("/api/admin/promotions", { method: "POST", body: JSON.stringify(payload) }),

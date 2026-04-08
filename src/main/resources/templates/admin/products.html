@@ -20,12 +20,13 @@
             <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}" class="btn btn-secondary">Пользователи</a>
         </p>
         <table class="data-table">
-            <thead><tr><th>ID</th><th>Название</th><th>Категория</th><th>Цена</th><th>Статус</th><th>Действия</th></tr></thead>
+            <thead><tr><th>ID</th><th>Название</th><th>Категория</th><th>Магазин</th><th>Цена</th><th>Статус</th><th>Действия</th></tr></thead>
             <tbody>
                 <tr th:each="p : ${products.content}">
                     <td th:text="${p.id}">0</td>
                     <td th:text="${p.name}">Название</td>
                     <td th:text="${p.category.name}">Категория</td>
+                    <td th:text="${p.store != null ? p.store.name : '—'}">—</td>
                     <td th:text="${#numbers.formatDecimal(p.price, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0</td>
                     <td th:text="${p.status}">статус</td>
                     <td>

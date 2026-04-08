@@ -16,6 +16,7 @@ import ru.lombard.entity.User;
 import ru.lombard.service.CurrentUserService;
 import ru.lombard.service.UserService;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
@@ -29,14 +30,18 @@ public class AuthApiController {
     @GetMapping("/me")
     public Map<String, ?> me() {
         return currentUserService.getCurrentUser()
-                .map(user -> Map.of(
-                        "authenticated", true,
-                        "id", user.getId(),
-                        "email", user.getEmail(),
-                        "fullName", user.getFullName(),
-                        "phone", user.getPhone() == null ? "" : user.getPhone(),
-                        "role", user.getRole() == null ? "USER" : user.getRole().name()
-                ))
+                .map(user -> {
+                    Map<String, Object> payload = new LinkedHashMap<>();
+                    payload.put("authenticated", true);
+                    payload.put("id", user.getId());
+                    payload.put("email", user.getEmail());
+                    payload.put("fullName", user.getFullName());
+                    payload.put("phone", user.getPhone() == null ? "" : user.getPhone());
+                    payload.put("role", user.getRole() == null ? "USER" : user.getRole().name());
+                    payload.put("storeId", user.getStore() != null ? user.getStore().getId() : null);
+                    payload.put("storeName", user.getStore() != null ? user.getStore().getName() : null);
+                    return payload;
+                })
                 .orElseGet(() -> Map.of("authenticated", false));
     }
 

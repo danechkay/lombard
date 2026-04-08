@@ -43,7 +43,7 @@ body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: va
 .catalog-filters .quick-categories .btn { position: relative; z-index: 6; pointer-events: auto; }
 .catalog-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 1.5rem;
     width: 100%;
 }

@@ -39,6 +39,10 @@ public class User {
     @Builder.Default
     private Role role = Role.USER;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id")
+    private Store store;
+
     @Column(name = "blocked", nullable = false)
     @Builder.Default
     private boolean blocked = false;

@@ -13,11 +13,12 @@
         <nav class="breadcrumb"><a th:href="@{/catalog}">Главная</a> / <a th:href="@{/admin}">Админ</a> / Заказы</nav>
         <h1>Заказы</h1>
         <table class="data-table">
-            <thead><tr><th>№</th><th>Покупатель</th><th>Сумма</th><th>Статус</th><th>Дата</th><th></th></tr></thead>
+            <thead><tr><th>№</th><th>Покупатель</th><th>Магазин</th><th>Сумма</th><th>Статус</th><th>Дата</th><th></th></tr></thead>
             <tbody>
                 <tr th:each="o : ${orders.content}">
                     <td th:text="${o.id}">0</td>
                     <td th:text="${o.user.fullName + ' (' + o.user.email + ')'}">Покупатель</td>
+                    <td th:text="${o.store != null ? o.store.name : '-'}">Магазин</td>
                     <td th:text="${#numbers.formatDecimal(o.totalAmount, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0</td>
                     <td th:text="${o.orderStatus}">статус</td>
                     <td th:text="${#temporals.format(o.createdAt, 'dd.MM.yyyy HH:mm')}">дата</td>

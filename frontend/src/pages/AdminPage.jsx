@@ -8,9 +8,10 @@ export default function AdminPage() {
         <Link to="/admin/products">Товары</Link>
         <Link to="/admin/promotions">Акции</Link>
         <Link to="/admin/categories">Категории</Link>
-        <Link to="/admin/orders">Заказы (только ADMIN)</Link>
+        <Link to="/admin/orders">Заказы</Link>
         <Link to="/admin/users">Пользователи (только ADMIN)</Link>
         <Link to="/admin/valuations">Заявки на оценку</Link>
+        <Link to="/admin/loans">Займы клиентов</Link>
       </div>
     </section>
   );

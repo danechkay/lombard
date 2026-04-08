@@ -14,7 +14,10 @@
         <h1>Заказ №<span th:text="${order.id}">0</span></h1>
         <div class="account-card">
             <p><strong>Покупатель:</strong> <span th:text="${order.userFullName}">Имя</span>, <span th:text="${order.userEmail}">email</span></p>
+            <p><strong>Магазин:</strong> <span th:text="${order.storeName}">Магазин</span></p>
             <p><strong>Статус:</strong> <span th:text="${order.orderStatus}">статус</span></p>
+            <p th:if="${order.reserved}"><strong>Бронь:</strong> Заказ закреплен за клиентом <span th:text="${order.reservedFor}">клиент</span></p>
+            <p th:if="${order.pickupCode != null and !#strings.isEmpty(order.pickupCode)}"><strong>Код выдачи:</strong> <span th:text="${order.pickupCode}">CODE1234</span></p>
             <p><strong>Сумма:</strong> <span th:text="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT') + ' ₽'}">0</span></p>
             <p th:if="${order.comment != null}"><strong>Комментарий:</strong> <span th:text="${order.comment}">—</span></p>
             <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">

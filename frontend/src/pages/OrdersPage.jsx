@@ -11,15 +11,19 @@ export default function OrdersPage() {
     api.getOrders().then(setOrders).catch((e) => setError(e.message));
   }, []);
 
-  const makeMockTxId = (id) => {
-    const suffix = String(id).split("").reduce((acc, ch) => (acc + Number(ch)) % 1000, 0);
-    return `MOCK-${id}-${String(suffix).padStart(3, "0")}`;
-  };
-
   const reload = async () => {
     setError("");
     const pageOrders = await api.getOrders();
     setOrders(pageOrders);
+  };
+
+  const statusRu = (status) => {
+    if (status === "NEW") return "Новый";
+    if (status === "PAID") return "Оплачен (забронирован)";
+    if (status === "SHIPPED") return "Готов к выдаче";
+    if (status === "COMPLETED") return "Выдан";
+    if (status === "CANCELLED") return "Отменен";
+    return status;
   };
 
   if (error) return <p className="error">{error}</p>;
@@ -34,7 +38,18 @@ export default function OrdersPage() {
           {orders.map((order) => (
             <article className="card orders-card" key={order.id}>
               <h3>Заказ #{order.id}</h3>
-              <p>Статус: {order.orderStatus}</p>
+              <p>Статус: {statusRu(order.orderStatus)}</p>
+              {order.reserved ? (
+                <p>
+                  Бронь подтверждена: товар закреплен за вами в магазине{" "}
+                  <strong>{order.storeName || "-"}</strong>.
+                </p>
+              ) : null}
+              {order.pickupCode ? (
+                <p>
+                  Код для получения: <strong>{order.pickupCode}</strong>
+                </p>
+              ) : null}
               <p>Сумма: {order.totalAmount} ₽</p>
               <p>Комментарий: {order.comment || "-"}</p>
               <ul>
@@ -73,7 +88,8 @@ export default function OrdersPage() {
                         receipt: {
                           orderStatus: order.orderStatus,
                           paidAt,
-                          txId: makeMockTxId(order.id),
+                          txId: `ORDER-${order.id}`,
+                          pickupCode: order.pickupCode || "",
                           amount: order.totalAmount
                         }
                       });

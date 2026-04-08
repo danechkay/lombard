@@ -31,7 +31,7 @@
                    th:text="${c.name}">Категория</a>
             </div>
             <div th:if="${!subCategories.isEmpty()}" style="margin-top:0.75rem; color:#6b5d4f; font-size:0.9rem;">Подкатегории:</div>
-            <div th:if="${!subCategories.isEmpty()}" class="quick-categories" style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <div th:if="${!subCategories.isEmpty()}" class="quick-categories" style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.5rem;">
                 <a th:each="c : ${subCategories}"
                    th:href="@{/catalog(categoryId=${c.id}, page=0)}"
                    class="btn btn-secondary"
@@ -45,6 +45,13 @@
             <form th:action="@{/catalog}" method="get" class="filters-form">
                 <input type="hidden" name="page" value="0"/>
                 <input type="hidden" name="categoryId" th:value="${categoryId}"/>
+                <div><label>Магазин</label>
+                    <select name="storeId">
+                        <option value="">Все магазины</option>
+                        <option th:each="s : ${stores}" th:value="${s.id}" th:text="${s.name}"
+                                th:selected="${storeId != null && storeId == s.id}">Магазин</option>
+                    </select>
+                </div>
                 <div><label>Цена от</label><input type="number" name="minPrice" th:value="${minPrice}" placeholder="0" step="0.01"/></div>
                 <div><label>Цена до</label><input type="number" name="maxPrice" th:value="${maxPrice}" placeholder="∞" step="0.01"/></div>
                 <div><label>Состояние</label>
@@ -70,6 +77,7 @@
                         <div class="price"
                              th:text="${#numbers.formatDecimal(p.price, 1, 'WHITESPACE', 0, 'POINT') + ' ₽'}">0 ₽</div>
                         <div class="condition" th:text="${p.condition.name() == 'NEW' ? 'Новое' : 'Б/У'}">Б/У</div>
+                        <div class="condition" th:if="${p.storeName != null}" style="font-size:0.85rem;color:#6b5d4f;" th:text="${p.storeName}">Магазин</div>
                     </div>
                 </a>
                 <div class="info product-card-actions" style="padding-top: 0;">
@@ -85,12 +93,12 @@
         <p th:if="${products.isEmpty()}" class="muted">Товаров не найдено.</p>
 
         <div class="pagination" th:if="${products.totalPages > 1}">
-            <a th:if="${products.hasPrevious()}" th:href="@{/catalog(categoryId=${categoryId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${products.number - 1})}">←</a>
+            <a th:if="${products.hasPrevious()}" th:href="@{/catalog(categoryId=${categoryId}, storeId=${storeId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${products.number - 1})}">←</a>
             <span th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}">
-                <a th:if="${i != products.number}" th:href="@{/catalog(categoryId=${categoryId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${i})}" th:text="${i + 1}">1</a>
+                <a th:if="${i != products.number}" th:href="@{/catalog(categoryId=${categoryId}, storeId=${storeId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${i})}" th:text="${i + 1}">1</a>
                 <span th:if="${i == products.number}" class="current" th:text="${i + 1}">1</span>
             </span>
-            <a th:if="${products.hasNext()}" th:href="@{/catalog(categoryId=${categoryId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${products.number + 1})}">→</a>
+            <a th:if="${products.hasNext()}" th:href="@{/catalog(categoryId=${categoryId}, storeId=${storeId}, minPrice=${minPrice}, maxPrice=${maxPrice}, condition=${condition}, search=${search}, page=${products.number + 1})}">→</a>
         </div>
     </main>
     <div th:replace="~{fragments/footer :: footer}"></div>

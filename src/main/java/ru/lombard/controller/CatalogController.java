@@ -17,6 +17,7 @@ import ru.lombard.service.CartService;
 import ru.lombard.service.CategoryService;
 import ru.lombard.service.CurrentUserService;
 import ru.lombard.service.ProductService;
+import ru.lombard.service.StoreService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,10 +33,12 @@ public class CatalogController {
     private final CategoryService categoryService;
     private final CartService cartService;
     private final CurrentUserService currentUserService;
+    private final StoreService storeService;
 
     @GetMapping
     public String catalog(
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long storeId,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) String condition,
@@ -49,7 +52,7 @@ public class CatalogController {
                 cond = Product.Condition.valueOf(condition.toUpperCase());
             } catch (IllegalArgumentException ignored) {}
         }
-        Page<ProductDto> products = productService.findPublished(categoryId, minPrice, maxPrice, cond, search, page);
+        Page<ProductDto> products = productService.findPublished(categoryId, storeId, minPrice, maxPrice, cond, search, page);
         List<CategoryDto> allCategories = categoryService.findAllOrdered();
         List<CategoryDto> rootCategories = allCategories.stream()
                 .filter(c -> c.getParentId() == null)
@@ -79,6 +82,8 @@ public class CatalogController {
         model.addAttribute("subCategories", subCategories);
         model.addAttribute("selectedRootId", selectedRootId);
         model.addAttribute("categoryId", categoryId);
+        model.addAttribute("storeId", storeId);
+        model.addAttribute("stores", storeService.listActive());
         model.addAttribute("minPrice", minPrice);
         model.addAttribute("maxPrice", maxPrice);
         model.addAttribute("condition", condition);

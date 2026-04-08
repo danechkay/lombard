@@ -27,6 +27,10 @@ public class Order {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false, length = 20)
     @Builder.Default
@@ -37,6 +41,9 @@ public class Order {
 
     @Column(columnDefinition = "TEXT")
     private String comment;
+
+    @Column(name = "pickup_code", length = 32)
+    private String pickupCode;
 
     @CreationTimestamp
     @Column(name = "created_at")

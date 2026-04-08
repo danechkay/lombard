@@ -23,6 +23,9 @@ public class ProductDto {
     private int viewsCount;
     private Long categoryId;
     private String categoryName;
+    private Long storeId;
+    private String storeName;
+    private String storeAddress;
     private Instant createdAt;
     private Instant publishedAt;
     private List<String> imageUrls;

@@ -15,7 +15,13 @@ public class OrderDto {
     private Long userId;
     private String userEmail;
     private String userFullName;
+    private Long storeId;
+    private String storeName;
+    private String storeAddress;
     private Order.OrderStatus orderStatus;
+    private boolean reserved;
+    private String reservedFor;
+    private String pickupCode;
     private BigDecimal totalAmount;
     private String comment;
     private Instant createdAt;
