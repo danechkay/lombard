@@ -1,219 +1,111 @@
-# Ламбарда — интернет-магазин (комиссионный магазин)
+# Ламбарда — веб-система комиссионного магазина
 
-Веб-приложение на **Java 17** и **Spring Boot 3** для комиссионного магазина «Ламбарда»: каталог товаров, корзина, заказы, админ-панель с разграничением прав.
+Учебный full-stack проект: интернет-магазин для комиссионной торговли.  
+Цель — показать полный цикл: каталог → корзина → заказ → админ-панель, с ролями и безопасностью.
 
-## Технологии
+## Зачем проект
 
-- **Backend:** Spring Boot 3.2, Spring Security, Spring Data JPA
-- **База данных:** MySQL (или PostgreSQL — см. `application-dev.yml`)
-- **Миграции:** Flyway
-- **Шаблоны:** Thymeleaf
-- **Сборка:** Maven
+Обычный интернет-магазин недостаточно отражает «комиссионку»: нужна публикация товаров менеджером, статусы заказов, разграничение прав.  
+«Ламбарда» закрывает эти сценарии end-to-end.
 
-## Роли
+Связанный проект аналитики на Python: [lombard-analytics-api](https://github.com/danechkay/lombard-analytics-api)
 
-| Роль       | Возможности |
-|------------|-------------|
-| Гость      | Просмотр каталога и карточки товара. Кнопка «Купить» ведёт на страницу входа. |
-| Пользователь | Всё то же + корзина, оформление заказа, личный кабинет, история заказов. |
-| Менеджер   | Всё то же + админка: товары (CRUD), категории, публикация/снятие с публикации. |
-| Администратор | Всё у менеджера + управление пользователями (блокировка, смена роли), управление заказами (смена статуса). |
+## Что умеет система
 
-## Запуск
+- Каталог с фильтрами, пагинацией и карточкой товара
+- Регистрация / вход, личный кабинет, история заказов
+- Корзина в БД (сохраняется между сессиями)
+- Оформление заказа со статусами (новый → оплачен → выдан / отменён)
+- Админка: товары (с фото), категории, заказы, пользователи
+- Роли: гость, пользователь, менеджер, администратор
 
-### 1. База данных
+## Стек
 
-Создайте БД и пользователя (например, MySQL):
+| Слой | Технологии |
+|------|------------|
+| Backend | Java 17, Spring Boot 3, Spring Security, Spring Data JPA |
+| API | REST (`/api/...`), сессионная авторизация |
+| БД | MySQL / PostgreSQL, миграции Flyway |
+| Frontend | React + Vite (перенос с Thymeleaf) |
+| Сборка | Maven, npm |
 
-```sql
-CREATE DATABASE lombard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'lombard'@'localhost' IDENTIFIED BY 'lombard';
-GRANT ALL ON lombard.* TO 'lombard'@'localhost';
-```
+## Архитектура (кратко)
 
-Параметры подключения задаются в `src/main/resources/application.yml` (по умолчанию: `jdbc:mysql://localhost:3306/lombard`, пользователь/пароль `lombard`).
+Backend отдаёт бизнес-логику и REST API.  
+React ходит на `/api/...` через Vite-прокси.  
+Права проверяет Spring Security (BCrypt, роли, CSRF для форм).
 
-### 2. Сборка и запуск
+Слои backend: `controller` → `service` → `repository` → `entity`.
 
-Требуется **Java 17** и **Maven 3.8+** (или запуск из IDE).
+## Что сделано мной
 
-```bash
-cd C:\Users\danechka\Desktop\lombard
-mvn clean package -DskipTests
-java -jar target/lombard-1.0.0-SNAPSHOT.jar
-```
+- Спроектировал роли и сценарии по ТЗ
+- Реализовал backend: каталог, корзина, заказы, админка
+- Настроил Security и хранение паролей (BCrypt)
+- Поднял схему БД через Flyway
+- Перенёс UI на React и связал с API
 
-Или без сборки JAR:
+## Быстрый запуск
+
+**Требования:** Java 17, Maven 3.8+, Node.js LTS, MySQL или PostgreSQL
+
+1. Создать БД и прописать доступ в `src/main/resources/application.yml`
+2. Backend из корня проекта:
 
 ```bash
 mvn spring-boot:run
 ```
 
-В IDE: запустите класс `ru.lombard.LombardApplication`.
+Приложение: http://localhost:8080
 
-Приложение будет доступно по адресу: **http://localhost:8080**
-
-### 2.1 Запуск React-фронтенда (новый этап переноса)
-
-Ниже подробная инструкция, если вы впервые работаете с React.
-
-#### Шаг 1. Установить Node.js
-
-1. Перейдите на сайт [https://nodejs.org](https://nodejs.org).
-2. Скачайте версию **LTS** для Windows.
-3. Установите с настройками по умолчанию.
-4. Перезапустите терминал/IDE.
-5. Проверьте установку:
+3. Frontend:
 
 ```bash
-node -v
-npm -v
-```
-
-Если команды выводят версии, значит всё установлено корректно.
-
-#### Шаг 2. Запустить backend (Spring Boot)
-
-Из корня проекта:
-
-```bash
-cd C:\Users\danechka\Desktop\lombard
-mvn spring-boot:run
-```
-
-Backend должен работать на `http://localhost:8080`.
-
-#### Шаг 3. Установить зависимости React
-
-Откройте второй терминал:
-
-```bash
-cd C:\Users\danechka\Desktop\lombard\frontend
+cd frontend
 npm install
-```
-
-#### Шаг 4. Запустить React в режиме разработки
-
-```bash
 npm run dev
 ```
 
-Frontend будет доступен по адресу `http://localhost:5173`.
+Frontend: http://localhost:5173
 
-#### Шаг 5. Как работает связка frontend + backend
+Демо-аккаунты (только для локального запуска):
+- `admin@lombard.ru` / `password` — администратор
+- `manager@lombard.ru` / `password` — менеджер
 
-- React отправляет запросы на `/api/...`.
-- Vite-прокси автоматически пересылает их на Spring Boot (`localhost:8080`).
-- Авторизация сессией работает через cookie (`credentials: include`).
-- Для входа используется Spring Security endpoint `/login`.
-- Для выхода используется `/logout`.
+Сразу смени пароли после первого входа.
 
-#### Шаг 6. Что уже перенесено на React
-
-- Каталог (`/`) с фильтрами и пагинацией.
-- Карточка товара (`/product/:slug`).
-- Корзина (`/cart`): список, изменение количества, удаление.
-- Оформление заказа (`/checkout`).
-- Авторизация (`/login`) и регистрация (`/register`).
-- Личный кабинет (`/account`) и история заказов (`/account/orders`).
-- Админка (`/admin`, `/admin/products`, `/admin/categories`, `/admin/orders`, `/admin/users`).
-
-#### Шаг 7. Какие API добавлены в backend
-
-- `GET /api/catalog`
-- `GET /api/catalog/categories`
-- `GET /api/catalog/product/{slug}`
-- `GET /api/auth/me`
-- `POST /api/auth/register`
-- `GET /api/cart`
-- `POST /api/cart/add`
-- `POST /api/cart/update`
-- `POST /api/cart/remove`
-- `GET /api/order/checkout`
-- `POST /api/order/place`
-- `GET /api/account`
-- `GET /api/account/orders`
-- `GET /api/admin/products`
-- `GET /api/admin/products/{id}`
-- `POST /api/admin/products`
-- `POST /api/admin/products/{id}`
-- `POST /api/admin/products/{id}/publish`
-- `POST /api/admin/products/{id}/unpublish`
-- `GET /api/admin/categories`
-- `POST /api/admin/categories`
-- `POST /api/admin/categories/{id}`
-- `POST /api/admin/categories/{id}/delete`
-- `GET /api/admin/orders`
-- `GET /api/admin/orders/{id}`
-- `POST /api/admin/orders/{id}/status`
-- `GET /api/admin/users`
-- `POST /api/admin/users/{id}/block`
-- `POST /api/admin/users/{id}/unblock`
-- `POST /api/admin/users/{id}/role`
-
-#### Шаг 8. Production-сборка React
-
-```bash
-cd C:\Users\danechka\Desktop\lombard\frontend
-npm run build
-```
-
-Собранные файлы будут в папке `frontend/dist`.
-На этапе разработки это не нужно, достаточно `npm run dev`.
-
-### 3. Первый вход
-
-При первом запуске создаются два пользователя (если БД пустая):
-
-| Email               | Пароль   | Роль     |
-|---------------------|----------|----------|
-| admin@lombard.ru    | password | Администратор |
-| manager@lombard.ru  | password | Менеджер |
-
-**Рекомендуется сразу сменить пароли после первого входа.**
-
-## Структура проекта
+## Структура
 
 ```
 lombard/
-├── src/main/java/ru/lombard/
-│   ├── config/          # Security, WebMvc, DataInitializer, GlobalModelAdvice
-│   ├── controller/      # Каталог, корзина, заказы, аккаунт, авторизация
-│   ├── controller/admin/ # Админ: товары, категории, заказы, пользователи
-│   ├── dto/
-│   ├── entity/
-│   ├── repository/
-│   └── service/
-├── src/main/resources/
-│   ├── db/migration/    # Flyway (схема БД)
-│   ├── static/          # CSS, JS, изображения
-│   └── templates/       # Thymeleaf (каталог, корзина, админка и т.д.)
-├── application.yml
-└── pom.xml
+├── src/main/java/ru/lombard/   # backend (config, controller, service, entity…)
+├── src/main/resources/         # Flyway, конфиг, статика/Thymeleaf
+└── frontend/                   # React + Vite
 ```
 
-## Основные сценарии (по ТЗ)
+## Роли
 
-1. **Публикация товара (Менеджер):** Вход → Администрирование → Товары → Добавить товар → заполнить форму, загрузить фото → Опубликовать (или сохранить черновик и опубликовать из списка).
-2. **Покупка (Пользователь):** Вход → Каталог/поиск → В корзину → Корзина → Оформить заказ → подтверждение. Заказ создаётся со статусом «Новый», корзина очищается.
-3. **Управление заказами (Админ):** Администрирование → Заказы → открыть заказ → изменить статус (Оплачен, Выдан, Отменён и т.д.).
-4. **Управление пользователями (Админ):** Администрирование → Пользователи → блокировка, смена роли.
+| Роль | Возможности |
+|------|-------------|
+| Гость | Просмотр каталога и карточки товара |
+| Пользователь | Корзина, заказ, личный кабинет, история заказов |
+| Менеджер | Товары, категории, публикация |
+| Администратор | Пользователи, заказы, роли, блокировка |
+
+## Основные сценарии
+
+1. **Публикация товара (менеджер):** вход → админка → товары → добавить → фото → опубликовать  
+2. **Покупка (пользователь):** каталог → корзина → оформить заказ  
+3. **Заказы (админ):** админка → заказы → сменить статус  
+4. **Пользователи (админ):** блокировка / смена роли  
 
 ## Безопасность
 
-- Пароли хранятся в виде BCrypt-хеша.
-- Доступ к админ-разделам по ролям (Spring Security).
-- CSRF-токены для форм включены по умолчанию.
+- Пароли: BCrypt
+- Доступ к админке по ролям (Spring Security)
+- CSRF для форм включён по умолчанию
 
-## Критерии приёмки (Definition of Done)
+## Статус
 
-- [x] Ролевая модель: админ видит админку и разделы пользователей/заказов, пользователь — нет.
-- [x] Менеджер может создать товар с фото; товар отображается на сайте после публикации.
-- [x] Авторизованный пользователь может добавить товар в корзину.
-- [x] Корзина хранится в БД (между сессиями).
-- [x] Оформление заказа создаёт запись в БД и очищает корзину.
-- [x] README с описанием запуска и структуры.
-
----
-
-Разработка по ТЗ интернет-магазина «Ламбарда». Все файлы проекта хранятся в папке `C:\Users\danechka\Desktop\lombard`.
+Рабочий учебный проект. Backend и основной React-фронт готовы.  
+Дальше: тесты, Docker Compose, деплой демо.
